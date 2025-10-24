@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MotoPower - Tienda de Motos</title>
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+  <!-- Encabezado -->
+  <header>
+    <div class="logo">
+      <img src="https://cdn-icons-png.flaticon.com/512/2972/2972185.png" alt="Logo MotoPower">
+      <h1>MotoPower</h1>
+    </div>
+    <p>Velocidad, potencia y estilo sobre dos ruedas 🏍️</p>
+  </header>
+
+  <!-- Navegación -->
+  <nav class="botones">
+    <button onclick="window.location.href='#catalogo'">Catálogo</button>
+    <button onclick="window.location.href='#servicios'">Servicios</button>
+    <button onclick="window.location.href='#inventario'">Inventario</button>
+    <button onclick="window.location.href='#contacto'">Contacto</button>
+  </nav>
+
+  <!-- Carrusel -->
+  <section class="carrusel">
+    <div class="slides">
+      <img src="https://www.yamaha-motor.com.mx/wp-content/uploads/2022/06/Yamaha-R15-V4.jpg" alt="Yamaha R15">
+      <img src="https://cdn.motor1.com/images/mgl/AkZQm/s1/honda-cb650r.jpg" alt="Honda CB650R">
+      <img src="https://images.squarespace-cdn.com/content/v1/639bda5c64492137de0500b9/1671321053359-UM5XS07LCXP787EFH84H/1e0d7bb4-af05-44ac-bdaa-e986ce460e9e.jpg?format=1000w" alt="Kawasaki Z900">
+    </div>
+  </section>
+
+  <!-- Catálogo -->
+  <section id="catalogo" class="catalogo">
+    <h2>Catálogo de Motos</h2>
+    <div class="productos">
+      <div class="tarjeta">
+        <img src="https://cdn.motor1.com/images/mgl/XoY8k/s1/kawasaki-z900.jpg" alt="Z900">
+        <h3>Kawasaki Z900</h3>
+        <p>Motor de 948cc, 123 HP. Ideal para los amantes de la potencia.</p>
+        <button onclick="alert('Agregada al carrito')">🛒 Comprar</button>
+      </div>
+      <div class="tarjeta">
+        <img src="https://cdn.motor1.com/images/mgl/AkZQm/s1/honda-cb650r.jpg" alt="CB650R">
+        <h3>Honda CB650R</h3>
+        <p>Motor 649cc, diseño naked agresivo y rendimiento confiable.</p>
+        <button onclick="alert('Agregada al carrito')">🛒 Comprar</button>
+      </div>
+      <div class="tarjeta">
+        <img src="https://www.yamaha-motor.com.mx/wp-content/uploads/2022/06/Yamaha-R15-V4.jpg" alt="R15 V4">
+        <h3>Yamaha R15 V4</h3>
+        <p>Motor 155cc, ideal para ciudad con estilo deportivo.</p>
+        <button onclick="alert('Agregada al carrito')">🛒 Comprar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Servicios -->
+  <section id="servicios" class="servicios">
+    <h2>Servicios disponibles</h2>
+    <ul>
+      <li>🔧 Mantenimiento preventivo y correctivo</li>
+      <li>🧢 Venta de accesorios y equipo de protección</li>
+      <li>💳 Financiamiento flexible y seguros</li>
+      <li>🚚 Envíos a todo México</li>
+    </ul>
+  </section>
+
+  <!-- Tabla de inventario -->
+  <section id="inventario" class="inventario">
+    <h2>Inventario Actual</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Modelo</th>
+          <th>Marca</th>
+          <th>Cilindraje</th>
+          <th>Disponibles</th>
+          <th>Precio</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Z900</td>
+          <td>Kawasaki</td>
+          <td>948 cc</td>
+          <td>5</td>
+          <td>$259,900</td>
+        </tr>
+        <tr>
+          <td>CB650R</td>
+          <td>Honda</td>
+          <td>649 cc</td>
+          <td>3</td>
+          <td>$214,500</td>
+        </tr>
+        <tr>
+          <td>R15 V4</td>
+          <td>Yamaha</td>
+          <td>155 cc</td>
+          <td>8</td>
+          <td>$105,000</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Contacto -->
+  <section id="contacto" class="contacto">
+    <h2>Contáctanos</h2>
+    <form onsubmit="alert('Gracias por contactarnos. Te responderemos pronto.'); return false;">
+      <label>Nombre:</label>
+      <input type="text" required>
+
+      <label>Correo electrónico:</label>
+      <input type="email" required>
+
+      <label>Mensaje:</label>
+      <textarea rows="4" required></textarea>
+
+      <button type="submit">Enviar mensaje</button>
+    </form>
+  </section>
+
+  <!-- Pie de página -->
+  <footer>
+    <p>&copy; 2025 MotoPower - Todos los derechos reservados</p>
+    <p>Síguenos en:
+      <a href="https://facebook.com" target="_blank">Facebook</a> |
+      <a href="https://instagram.com" target="_blank">Instagram</a>
+    </p>
+  </footer>
+
+  <!-- Script carrusel -->
+  <script>
+    let index = 0;
+    const slides = document.querySelector('.slides');
+    const total = slides.children.length;
+
+    setInterval(() => {
+      index = (index + 1) % total;
+      slides.style.transform = `translateX(-${index * 100}%)`;
+    }, 3000);
+  </script>
+
+</body>
+</html>
+
