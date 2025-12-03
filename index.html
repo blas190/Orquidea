@@ -5,10 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MotoPower - Tienda de Motos</title>
   <link rel="stylesheet" href="estilos.css">
+  <style>
+    /* Estilos básicos para las nuevas secciones (puedes moverlos a estilos.css) */
+    .login, .contacto {
+        max-width: 400px;
+        margin: 40px auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    }
+    .login h2, .contacto h2 {
+        text-align: center;
+        color: #f39c12;
+    }
+    .login button, .contacto button {
+        background-color: #f39c12;
+        color: white;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 15px;
+    }
+    /* Estilos generales (asumiendo que 'estilos.css' existe) */
+    .logo { display: flex; align-items: center; }
+    .logo img { width: 50px; margin-right: 10px; }
+    .slides { display: flex; transition: transform 0.5s ease-in-out; }
+    .slides img { width: 100%; flex-shrink: 0; }
+  </style>
 </head>
 <body>
 
-  <!-- Encabezado -->
   <header>
     <div class="logo">
       <img src="https://cdn-icons-png.flaticon.com/512/2972/2972185.png" alt="Logo MotoPower">
@@ -17,15 +45,14 @@
     <p>Velocidad, potencia y estilo sobre dos ruedas 🏍️</p>
   </header>
 
-  <!-- Navegación -->
   <nav class="botones">
     <button onclick="window.location.href='#catalogo'">Catálogo</button>
     <button onclick="window.location.href='#servicios'">Servicios</button>
     <button onclick="window.location.href='#inventario'">Inventario</button>
+    <button onclick="window.location.href='#login'">Login</button>
     <button onclick="window.location.href='#contacto'">Contacto</button>
   </nav>
 
-  <!-- Carrusel -->
   <section class="carrusel">
     <div class="slides">
       <img src="https://www.yamaha-motor.com.mx/wp-content/uploads/2022/06/Yamaha-R15-V4.jpg" alt="Yamaha R15">
@@ -34,7 +61,6 @@
     </div>
   </section>
 
-  <!-- Catálogo -->
   <section id="catalogo" class="catalogo">
     <h2>Catálogo de Motos</h2>
     <div class="productos">
@@ -59,7 +85,6 @@
     </div>
   </section>
 
-  <!-- Servicios -->
   <section id="servicios" class="servicios">
     <h2>Servicios disponibles</h2>
     <ul>
@@ -70,9 +95,25 @@
     </ul>
   </section>
 
-  <!-- Tabla de inventario -->
+  <section id="login" class="login">
+    <h2>Acceso al Inventario</h2>
+    <form id="formulario-login">
+      <label for="login-email">Correo electrónico:</label>
+      <input type="email" id="login-email" required placeholder="admin@motopower.com">
+
+      <label for="login-password">Contraseña:</label>
+      <input type="password" id="login-password" required placeholder="password123">
+
+      <button type="submit">Iniciar Sesión</button>
+      <p id="login-feedback" style="margin-top: 10px; font-weight: bold;"></p>
+    </form>
+    <p id="login-status-info" style="text-align: center; margin-top: 15px; color: gray;">
+        Estado: No autenticado
+    </p>
+  </section>
+
   <section id="inventario" class="inventario">
-    <h2>Inventario Actual</h2>
+    <h2>Inventario Actual (Cargado desde API)</h2>
     <table>
       <thead>
         <tr>
@@ -83,50 +124,29 @@
           <th>Precio</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <td>Z900</td>
-          <td>Kawasaki</td>
-          <td>948 cc</td>
-          <td>5</td>
-          <td>$259,900</td>
-        </tr>
-        <tr>
-          <td>CB650R</td>
-          <td>Honda</td>
-          <td>649 cc</td>
-          <td>3</td>
-          <td>$214,500</td>
-        </tr>
-        <tr>
-          <td>R15 V4</td>
-          <td>Yamaha</td>
-          <td>155 cc</td>
-          <td>8</td>
-          <td>$105,000</td>
-        </tr>
+      <tbody id="inventario-body">
+        <tr><td colspan="5">Inicia sesión para ver el inventario.</td></tr>
       </tbody>
     </table>
   </section>
 
-  <!-- Contacto -->
   <section id="contacto" class="contacto">
     <h2>Contáctanos</h2>
-    <form onsubmit="alert('Gracias por contactarnos. Te responderemos pronto.'); return false;">
-      <label>Nombre:</label>
-      <input type="text" required>
+    <form id="formulario-contacto"> 
+      <label for="nombre">Nombre:</label>
+      <input type="text" id="nombre" required>
 
-      <label>Correo electrónico:</label>
-      <input type="email" required>
+      <label for="correo">Correo electrónico:</label>
+      <input type="email" id="correo" required>
 
-      <label>Mensaje:</label>
-      <textarea rows="4" required></textarea>
+      <label for="mensaje">Mensaje:</label>
+      <textarea id="mensaje" rows="4" required></textarea>
 
       <button type="submit">Enviar mensaje</button>
+      <p id="mensaje-feedback" style="margin-top: 10px;"></p>
     </form>
   </section>
 
-  <!-- Pie de página -->
   <footer>
     <p>&copy; 2025 MotoPower - Todos los derechos reservados</p>
     <p>Síguenos en:
@@ -135,18 +155,182 @@
     </p>
   </footer>
 
-  <!-- Script carrusel -->
-  <script>
+  <script type="module">
+    
+    // 🎯 ¡URL DE RENDER APLICADA!
+    const API_BASE_URL = "https://orquidea.onrender.com/api"; 
+
+    const statusInfo = document.getElementById('login-status-info');
+    
+    // ----------------------------------------------------------------------
+    // FUNCIONES DE LOGIN Y AUTENTICACIÓN
+    // ----------------------------------------------------------------------
+
+    /**
+     * Verifica el token de usuario guardado al cargar la página
+     */
+    function verificarEstadoLogin() {
+        const token = localStorage.getItem('userToken');
+        if (token) {
+            statusInfo.textContent = 'Estado: Autenticado. Puedes cargar el inventario.';
+            statusInfo.style.color = 'green';
+            cargarInventario(); 
+        } else {
+            statusInfo.textContent = 'Estado: No autenticado. Inicia sesión para ver el inventario.';
+            statusInfo.style.color = 'gray';
+        }
+    }
+
+    /**
+     * Función para manejar el inicio de sesión enviando credenciales al backend
+     */
+    async function manejarLogin(event) {
+        event.preventDefault(); 
+        
+        const url = `${API_BASE_URL}/login`;
+        const feedback = document.getElementById('login-feedback');
+        
+        const datosLogin = {
+            email: document.getElementById('login-email').value,
+            password: document.getElementById('login-password').value,
+        };
+
+        feedback.textContent = 'Verificando...';
+        feedback.style.color = 'gray';
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datosLogin)
+            });
+
+            const resultado = await response.json();
+            
+            if (response.ok) {
+                // ÉXITO
+                feedback.textContent = `¡Bienvenido, ${resultado.usuario}!`;
+                feedback.style.color = 'green';
+                
+                // Guardar el token simulado
+                localStorage.setItem('userToken', resultado.token);
+                
+                verificarEstadoLogin(); 
+                
+            } else {
+                // FALLO
+                feedback.textContent = resultado.mensaje;
+                feedback.style.color = 'red';
+            }
+
+        } catch (error) {
+            console.error('Error de conexión al intentar iniciar sesión:', error);
+            feedback.textContent = 'Error de conexión con el servidor.';
+            feedback.style.color = 'red';
+        }
+    }
+    
+    // ----------------------------------------------------------------------
+    // FUNCIONES DE INVENTARIO Y CONTACTO (CON CONEXIÓN API)
+    // ----------------------------------------------------------------------
+
+    /**
+     * Función para cargar la tabla de inventario desde la API (Requiere Token)
+     */
+    async function cargarInventario() {
+        const token = localStorage.getItem('userToken');
+        const tablaBody = document.getElementById('inventario-body');
+        
+        if (!token) {
+            tablaBody.innerHTML = `<tr><td colspan="5">Inicia sesión para ver el inventario.</td></tr>`;
+            return;
+        }
+
+        const url = `${API_BASE_URL}/inventario`;
+        
+        try {
+            const response = await fetch(url);
+            const inventario = await response.json();
+
+            // Limpiar y llenar la tabla
+            tablaBody.innerHTML = ''; 
+
+            inventario.forEach(moto => {
+                const row = tablaBody.insertRow();
+                row.insertCell(0).textContent = moto.modelo;
+                row.insertCell(1).textContent = moto.marca;
+                row.insertCell(2).textContent = moto.cilindraje;
+                row.insertCell(3).textContent = moto.disponibles;
+                const precioFormateado = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(moto.precio);
+                row.insertCell(4).textContent = precioFormateado;
+            });
+
+        } catch (error) {
+            console.error('Error al cargar inventario:', error);
+            tablaBody.innerHTML = `<tr><td colspan="5">Error al cargar inventario: El servidor no responde o hay un problema de CORS.</td></tr>`;
+        }
+    }
+    
+    /**
+     * Función para enviar el formulario de contacto a la API
+     */
+    async function enviarFormularioContacto(event) {
+        event.preventDefault(); 
+
+        const url = `${API_BASE_URL}/contacto`;
+        const feedback = document.getElementById('mensaje-feedback');
+        
+        const datos = {
+            nombre: document.getElementById('nombre').value,
+            correo: document.getElementById('correo').value,
+            mensaje: document.getElementById('mensaje').value,
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            });
+
+            const resultado = await response.json();
+            
+            feedback.textContent = resultado.mensaje;
+            feedback.style.color = response.ok ? 'green' : 'red';
+
+            if (response.ok) {
+                document.getElementById('formulario-contacto').reset(); 
+            }
+
+        } catch (error) {
+            console.error('Error al enviar formulario:', error);
+            feedback.textContent = 'Hubo un error de conexión con el servidor.';
+            feedback.style.color = 'red';
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    // EJECUCIÓN AL CARGAR EL DOCUMENTO
+    // ----------------------------------------------------------------------
+
+    document.addEventListener('DOMContentLoaded', () => {
+        verificarEstadoLogin(); 
+        
+        document.getElementById('formulario-login').addEventListener('submit', manejarLogin);
+        document.getElementById('formulario-contacto').addEventListener('submit', enviarFormularioContacto);
+    });
+
+    // Script carrusel (se mantiene)
     let index = 0;
     const slides = document.querySelector('.slides');
     const total = slides.children.length;
 
     setInterval(() => {
       index = (index + 1) % total;
-      slides.style.transform = `translateX(-${index * 100}%)`;
+      if (slides) { 
+          slides.style.transform = `translateX(-${index * 100}%)`;
+      }
     }, 3000);
-  </script>
-
+</script>
 </body>
 </html>
-
