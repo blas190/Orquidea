@@ -49,7 +49,7 @@
     <button onclick="window.location.href='#catalogo'">Catálogo</button>
     <button onclick="window.location.href='#servicios'">Servicios</button>
     <button onclick="window.location.href='#inventario'">Inventario</button>
-    <button onclick="window.location.href='#login'">Login</button>
+    <button onclick="window.location.href='#login'">Acceso</button>
     <button onclick="window.location.href='#contacto'">Contacto</button>
   </nav>
 
@@ -94,9 +94,25 @@
       <li>🚚 Envíos a todo México</li>
     </ul>
   </section>
+  
+  <h2 style="text-align: center; margin-top: 50px;">Área de Acceso</h2>
 
-  <section id="login" class="login">
-    <h2>Acceso al Inventario</h2>
+  <section id="registro" class="login" style="margin-top: 20px;">
+    <h2>Registrarse</h2>
+    <form id="formulario-registro">
+      <label for="register-email">Correo electrónico:</label>
+      <input type="email" id="register-email" required placeholder="nuevo.usuario@test.com">
+
+      <label for="register-password">Contraseña:</label>
+      <input type="password" id="register-password" required>
+
+      <button type="submit">Crear Cuenta</button>
+      <p id="register-feedback" style="margin-top: 10px; font-weight: bold;"></p>
+    </form>
+  </section>
+
+  <section id="login" class="login" style="margin-top: 20px;">
+    <h2>Iniciar Sesión</h2>
     <form id="formulario-login">
       <label for="login-email">Correo electrónico:</label>
       <input type="email" id="login-email" required placeholder="admin@motopower.com">
@@ -113,7 +129,7 @@
   </section>
 
   <section id="inventario" class="inventario">
-    <h2>Inventario Actual (Cargado desde API)</h2>
+    <h2>Inventario Actual (Requiere Login)</h2>
     <table>
       <thead>
         <tr>
@@ -157,18 +173,15 @@
 
   <script type="module">
     
-    // 🎯 ¡URL DE RENDER APLICADA!
+    // 🎯 URL DE RENDER APLICADA para el backend
     const API_BASE_URL = "https://orquidea.onrender.com/api"; 
 
     const statusInfo = document.getElementById('login-status-info');
     
     // ----------------------------------------------------------------------
-    // FUNCIONES DE LOGIN Y AUTENTICACIÓN
+    // FUNCIONES DE LOGIN Y REGISTRO
     // ----------------------------------------------------------------------
 
-    /**
-     * Verifica el token de usuario guardado al cargar la página
-     */
     function verificarEstadoLogin() {
         const token = localStorage.getItem('userToken');
         if (token) {
@@ -181,9 +194,43 @@
         }
     }
 
-    /**
-     * Función para manejar el inicio de sesión enviando credenciales al backend
-     */
+    async function manejarRegistro(event) {
+        event.preventDefault();
+
+        const url = `${API_BASE_URL}/register`;
+        const feedback = document.getElementById('register-feedback');
+        
+        const datosRegistro = {
+            email: document.getElementById('register-email').value,
+            password: document.getElementById('register-password').value,
+        };
+
+        feedback.textContent = 'Registrando...';
+        feedback.style.color = 'gray';
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datosRegistro)
+            });
+
+            const resultado = await response.json();
+            
+            feedback.textContent = resultado.mensaje;
+            feedback.style.color = response.ok ? 'green' : 'red';
+            
+            if (response.ok) {
+                document.getElementById('formulario-registro').reset();
+            }
+
+        } catch (error) {
+            console.error('Error de conexión al intentar registrar:', error);
+            feedback.textContent = 'Error de conexión con el servidor.';
+            feedback.style.color = 'red';
+        }
+    }
+
     async function manejarLogin(event) {
         event.preventDefault(); 
         
@@ -212,7 +259,6 @@
                 feedback.textContent = `¡Bienvenido, ${resultado.usuario}!`;
                 feedback.style.color = 'green';
                 
-                // Guardar el token simulado
                 localStorage.setItem('userToken', resultado.token);
                 
                 verificarEstadoLogin(); 
@@ -231,12 +277,9 @@
     }
     
     // ----------------------------------------------------------------------
-    // FUNCIONES DE INVENTARIO Y CONTACTO (CON CONEXIÓN API)
+    // FUNCIONES DE INVENTARIO Y CONTACTO
     // ----------------------------------------------------------------------
 
-    /**
-     * Función para cargar la tabla de inventario desde la API (Requiere Token)
-     */
     async function cargarInventario() {
         const token = localStorage.getItem('userToken');
         const tablaBody = document.getElementById('inventario-body');
@@ -252,7 +295,6 @@
             const response = await fetch(url);
             const inventario = await response.json();
 
-            // Limpiar y llenar la tabla
             tablaBody.innerHTML = ''; 
 
             inventario.forEach(moto => {
@@ -271,9 +313,6 @@
         }
     }
     
-    /**
-     * Función para enviar el formulario de contacto a la API
-     */
     async function enviarFormularioContacto(event) {
         event.preventDefault(); 
 
@@ -317,10 +356,11 @@
         verificarEstadoLogin(); 
         
         document.getElementById('formulario-login').addEventListener('submit', manejarLogin);
+        document.getElementById('formulario-registro').addEventListener('submit', manejarRegistro);
         document.getElementById('formulario-contacto').addEventListener('submit', enviarFormularioContacto);
     });
 
-    // Script carrusel (se mantiene)
+    // Script carrusel
     let index = 0;
     const slides = document.querySelector('.slides');
     const total = slides.children.length;
