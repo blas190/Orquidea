@@ -11,13 +11,13 @@ CORS(app)
 # BASES DE DATOS FALSAS (EN MEMORIA)
 # =========================================================================
 
-# 1. Usuarios para Login y Registro: Email y Contraseña (simulado)
+# 1. Usuarios iniciales de prueba
 USUARIOS = {
     "admin@motopower.com": "password123",  
     "usuario@test.com": "prueba123",
 }
 
-# 2. Inventario para la tabla
+# 2. Inventario 
 INVENTARIO = [
     {"id": 1, "modelo": "Z900", "marca": "Kawasaki", "cilindraje": "948 cc", "disponibles": 5, "precio": 259900},
     {"id": 2, "modelo": "CB650R", "marca": "Honda", "cilindraje": "649 cc", "disponibles": 3, "precio": 214500},
@@ -102,5 +102,4 @@ def recibir_contacto():
 # =========================================================================
 
 if __name__ == '__main__':
-    # Usar host 0.0.0.0 y puerto 5000 para despliegue y pruebas locales
     app.run(host='0.0.0.0', port=5000, debug=True)
