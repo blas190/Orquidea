@@ -35,7 +35,13 @@ MENSAJES = []
 def register_usuario():
     """Simula el registro de un nuevo usuario."""
     
-    datos_registro = request.get_json()
+    # Intenta obtener los datos JSON
+    try:
+        datos_registro = request.get_json()
+    except Exception as e:
+        # En caso de que la petición no sea JSON válida
+        print(f"Error al obtener JSON en registro: {e}")
+        return jsonify({"mensaje": "Error: El cuerpo de la petición no es JSON válido."}), 400
     
     if not datos_registro or 'email' not in datos_registro or 'password' not in datos_registro:
         return jsonify({"mensaje": "Email y contraseña son requeridos para el registro."}), 400
@@ -50,7 +56,7 @@ def register_usuario():
     # 2. Simular el registro (añadir al diccionario USUARIOS)
     USUARIOS[email] = password
     
-    print(f"Nuevo usuario registrado: {email}")
+    print(f"Nuevo usuario registrado: {email}. Total de usuarios: {len(USUARIOS)}")
     return jsonify({
         "mensaje": "Registro exitoso. Ahora puedes iniciar sesión.",
         "usuario": email
