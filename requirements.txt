@@ -1,4 +1,4 @@
-# requirements.txt
+
 Flask
 flask-cors
-gunicorn # Servidor web WSGI para producción
+gunicorn 
