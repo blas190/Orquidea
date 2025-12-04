@@ -173,8 +173,8 @@
 
   <script type="module">
     
-    // 🎯 URL DE RENDER APLICADA para el backend
-    const API_BASE_URL = "https://motoschingonas.onrender.com"; 
+    // URL DE RENDER APLICADA para el backend
+    const API_BASE_URL = "https://motoschingonas.onrender.com/api"; 
 
     const statusInfo = document.getElementById('login-status-info');
     
@@ -355,7 +355,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         verificarEstadoLogin(); 
         
-        // 🎯 Asignación de eventos AHORA COMPLETA
+        //  Asignación de eventos AHORA COMPLETA
         document.getElementById('formulario-login').addEventListener('submit', manejarLogin);
         document.getElementById('formulario-registro').addEventListener('submit', manejarRegistro);
         document.getElementById('formulario-contacto').addEventListener('submit', enviarFormularioContacto);
