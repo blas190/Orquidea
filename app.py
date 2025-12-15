@@ -113,23 +113,6 @@ def recibir_contacto():
     return jsonify({"mensaje": "¡Gracias! Hemos recibido tu mensaje."}), 201
 
 
-@app.route('/', methods=['GET', 'HEAD'])
-def home():
-    return jsonify({
-        "mensaje": "API MotoPower funcionando correctamente 🚀",
-        "endpoints": [
-            "/api/login",
-            "/api/register",
-            "/api/inventario",
-            "/api/contacto"
-        ]
-    }), 200
-
-
-@app.route('/favicon.ico')
-def favicon():
-    return '', 204
-
 # =========================================================================
 # INICIO DEL SERVIDOR
 # =========================================================================
