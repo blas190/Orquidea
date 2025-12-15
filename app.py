@@ -32,7 +32,7 @@ MENSAJES = []
 def register_usuario():
     """Simula el registro de un nuevo usuario con manejo de errores de JSON."""
     
-    # 🎯 PUNTO DE CORRECCIÓN: Intentamos obtener el JSON con manejo de errores
+    # PUNTO DE CORRECCIÓN: Intentamos obtener el JSON con manejo de errores
     try:
         datos_registro = request.get_json()
     except Exception:
@@ -110,6 +110,17 @@ def recibir_contacto():
     MENSAJES.append(datos_contacto)
     
     return jsonify({"mensaje": "¡Gracias! Hemos recibido tu mensaje."}), 201
+@app.route('/', methods=['GET', 'HEAD'])
+def home():
+    return jsonify({
+        "mensaje": "API MotoPower funcionando correctamente 🚀",
+        "endpoints": [
+            "/api/login",
+            "/api/register",
+            "/api/inventario",
+            "/api/contacto"
+        ]
+    }), 200
 
 # =========================================================================
 # INICIO DEL SERVIDOR
