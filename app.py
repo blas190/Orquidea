@@ -113,6 +113,10 @@ def recibir_contacto():
     return jsonify({"mensaje": "¡Gracias! Hemos recibido tu mensaje."}), 201
 
 
+
+@app.route('/')
+def index():
+    return render_template('index.html')
 # =========================================================================
 # INICIO DEL SERVIDOR
 # =========================================================================
