@@ -110,6 +110,8 @@ def recibir_contacto():
     MENSAJES.append(datos_contacto)
     
     return jsonify({"mensaje": "¡Gracias! Hemos recibido tu mensaje."}), 201
+
+
 @app.route('/', methods=['GET', 'HEAD'])
 def home():
     return jsonify({
@@ -121,6 +123,11 @@ def home():
             "/api/contacto"
         ]
     }), 200
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204
 
 # =========================================================================
 # INICIO DEL SERVIDOR
