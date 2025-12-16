@@ -49,9 +49,34 @@
     <button onclick="window.location.href='#catalogo'">Catálogo</button>
     <button onclick="window.location.href='#servicios'">Servicios</button>
     <button onclick="window.location.href='#inventario'">Inventario</button>
-    <button onclick="window.location.href='#login'">Acceso</button>
+    <button id="btn-auth">Iniciar sesión / Registrarse</button>
+
     <button onclick="window.location.href='#contacto'">Contacto</button>
   </nav>
+<div id="auth-modal">
+  <div class="auth-panel">
+    <div class="close" id="close-auth">✖</div>
+
+    <!-- LOGIN -->
+<div id="login-panel">
+  <h2>Iniciar sesión</h2>
+  <input type="email" id="login-email">
+  <input type="password" id="login-password">
+  <button id="login-btn">Entrar</button>
+  <p id="login-feedback"></p>
+  <div class="switch" id="go-register">¿No tienes cuenta? Regístrate</div>
+</div>
+
+<!-- REGISTRO -->
+<div id="register-panel" style="display:none;">
+  <h2>Registrarse</h2>
+  <input type="email" id="register-email">
+  <input type="password" id="register-password">
+  <button id="register-btn">Crear cuenta</button>
+  <p id="register-feedback"></p>
+  <div class="switch" id="go-login">¿Ya tienes cuenta? Inicia sesión</div>
+</div>
+
 
   <section class="carrusel">
     <div class="slides">
@@ -96,39 +121,7 @@
     </ul>
   </section>
   
- <h2 style="text-align: center; margin-top: 50px;">Área de Acceso</h2>
-
-<section id="registro" class="login" style="margin-top: 20px;">
-    <h2>Registrarse</h2>
-    <form id="formulario-registro">
-      <label for="register-email">Correo electrónico:</label>
-      <input type="email" id="register-email" required placeholder="nuevo.usuario@test.com">
-
-      <label for="register-password">Contraseña:</label>
-      <input type="password" id="register-password" required>
-
-      <button type="submit">Crear Cuenta</button>
-      <p id="register-feedback" style="margin-top: 10px; font-weight: bold;"></p>
-    </form>
-</section>
-
-<section id="login" class="login" style="margin-top: 20px;">
-    <h2>Iniciar Sesión</h2>
-    <form id="formulario-login">
-      <label for="login-email">Correo electrónico:</label>
-      <input type="email" id="login-email" required placeholder="admin@motopower.com">
-
-      <label for="login-password">Contraseña:</label>
-      <input type="password" id="login-password" required placeholder="password123">
-
-      <button type="submit">Iniciar Sesión</button>
-      <p id="login-feedback" style="margin-top: 10px; font-weight: bold;"></p>
-    </form>
-    <p id="login-status-info" style="text-align: center; margin-top: 15px; color: gray;">
-        Estado: No autenticado
-    </p>
-</section>
-
+ 
   <section id="inventario" class="inventario">
     <h2>Inventario Actual (Requiere Login)</h2>
     <table>
@@ -261,7 +254,8 @@
                 feedback.style.color = 'green';
                 
                 localStorage.setItem('userToken', resultado.token);
-                
+
+                actualizarInventarioUI();
                 verificarEstadoLogin(); 
                 
             } else {
@@ -348,19 +342,56 @@
             feedback.style.color = 'red';
         }
     }
+    
+    function actualizarInventarioUI() {
+  const token = localStorage.getItem('userToken');
+  const inventarioSection = document.getElementById('inventario');
+
+  if (token) {
+    inventarioSection.style.display = 'block';
+  } else {
+    inventarioSection.style.display = 'none';
+  }
+}
 
     // ----------------------------------------------------------------------
     // EJECUCIÓN AL CARGAR EL DOCUMENTO
     // ----------------------------------------------------------------------
 
     document.addEventListener('DOMContentLoaded', () => {
-        verificarEstadoLogin(); 
-        
-        //  Asignación de eventos AHORA COMPLETA
-        document.getElementById('formulario-login').addEventListener('submit', manejarLogin);
-        document.getElementById('formulario-registro').addEventListener('submit', manejarRegistro);
-        document.getElementById('formulario-contacto').addEventListener('submit', enviarFormularioContacto);
-    });
+  verificarEstadoLogin(); 
+  actualizarInventarioUI();
+
+  // BOTONES DEL MODAL
+  document.getElementById('login-btn').addEventListener('click', manejarLogin);
+  document.getElementById('register-btn').addEventListener('click', manejarRegistro);
+
+  // FORMULARIO DE CONTACTO (ESTE SÍ EXISTE)
+  document.getElementById('formulario-contacto')
+    .addEventListener('submit', enviarFormularioContacto);
+
+  // MODAL
+  const authModal = document.getElementById('auth-modal');
+
+  document.getElementById('btn-auth').onclick = () => {
+    authModal.classList.add('active');
+  };
+
+  document.getElementById('close-auth').onclick = () => {
+    authModal.classList.remove('active');
+  };
+
+  document.getElementById('go-register').onclick = () => {
+    document.getElementById('login-panel').style.display = 'none';
+    document.getElementById('register-panel').style.display = 'block';
+  };
+
+  document.getElementById('go-login').onclick = () => {
+    document.getElementById('register-panel').style.display = 'none';
+    document.getElementById('login-panel').style.display = 'block';
+  };
+});
+
 
     // Script carrusel
     let index = 0;
@@ -373,6 +404,7 @@
           slides.style.transform = `translateX(-${index * 100}%)`;
       }
     }, 3000);
+
 </script>
 
 </body>
