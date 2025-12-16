@@ -170,23 +170,20 @@
     // URL DE RENDER APLICADA para el backend
     const API_BASE_URL = "https://motoschingonas.onrender.com/api"; 
 
-    const statusInfo = document.getElementById('login-status-info');
     
     // ----------------------------------------------------------------------
     // FUNCIONES DE LOGIN Y REGISTRO
     // ----------------------------------------------------------------------
 
     function verificarEstadoLogin() {
-        const token = localStorage.getItem('userToken');
-        if (token) {
-            statusInfo.textContent = 'Estado: Autenticado. Puedes cargar el inventario.';
-            statusInfo.style.color = 'green';
-            cargarInventario(); 
-        } else {
-            statusInfo.textContent = 'Estado: No autenticado. Inicia sesión para ver el inventario.';
-            statusInfo.style.color = 'gray';
-        }
-    }
+  const token = localStorage.getItem('userToken');
+
+  if (token) {
+    cargarInventario();
+    actualizarInventarioUI();
+  }
+}
+
 
     async function manejarRegistro(event) {
         event.preventDefault();
