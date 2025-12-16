@@ -37,6 +37,15 @@ nav.botones {
   background: #e30613;
   padding: 15px;
 }
+  
+/* Botón de autenticación a la derecha */
+#btn-auth {
+  margin-left: auto;   /* SOLO este botón se va a la derecha */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 
 nav.botones button {
   background: white;
@@ -147,6 +156,7 @@ nav.botones button:hover {
 
 /* ======== INVENTARIO ======== */
 .inventario {
+  display: none;
   max-width: 900px;
   margin: 40px auto;
   background: white;
@@ -296,3 +306,31 @@ footer a:hover {
   font-weight: bold;
 }
 
+
+.auth-container {
+  position: relative;
+}
+
+.profile-menu {
+  display: none;
+  position: absolute;
+  top: 45px;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  min-width: 160px;
+  z-index: 10000;
+}
+
+.profile-item {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.profile-item:hover {
+  background: #f2f2f2;
+}
+.auth-container {
+  position: relative;
+}

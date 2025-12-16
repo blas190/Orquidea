@@ -49,10 +49,21 @@
     <button onclick="window.location.href='#catalogo'">Catálogo</button>
     <button onclick="window.location.href='#servicios'">Servicios</button>
     <button onclick="window.location.href='#inventario'">Inventario</button>
-    <button id="btn-auth">Iniciar sesión / Registrarse</button>
-
     <button onclick="window.location.href='#contacto'">Contacto</button>
+    <div class="auth-container">
+  <button id="btn-auth" type="button">
+    <span id="auth-icon">🔐</span>
+    <span id="auth-text">Iniciar sesión</span>
+  </button>
+
+  <div id="profile-menu" class="profile-menu">
+    <div class="profile-item">👤 Perfil</div>
+    <div class="profile-item" id="logout-btn">🚪 Cerrar sesión</div>
+  </div>
+</div>
+
   </nav>
+  
 <div id="auth-modal">
   <div class="auth-panel">
     <div class="close" id="close-auth">✖</div>
@@ -183,7 +194,7 @@
 
   if (token) {
     cargarInventario();
-    actualizarInventarioUI();
+    actualizarEstadoUI();
   }
 }
 
@@ -255,9 +266,11 @@
                 
                 localStorage.setItem('userToken', resultado.token);
 
-                actualizarInventarioUI();
-                verificarEstadoLogin(); 
-                
+                verificarEstadoLogin();
+                actualizarEstadoUI();
+                document.getElementById('auth-modal').classList.remove('active');
+
+
             } else {
                 // FALLO
                 feedback.textContent = resultado.mensaje;
@@ -343,16 +356,31 @@
         }
     }
     
-    function actualizarInventarioUI() {
+   function actualizarEstadoUI() {
   const token = localStorage.getItem('userToken');
-  const inventarioSection = document.getElementById('inventario');
+  const authIcon = document.getElementById('auth-icon');
+  const authText = document.getElementById('auth-text');
+  const inventario = document.getElementById('inventario');
+  const profileMenu = document.getElementById('profile-menu');
 
   if (token) {
-    inventarioSection.style.display = 'block';
+    authIcon.textContent = '👤';
+    authText.textContent = 'Bienvenido';
+    inventario.style.display = 'block';
   } else {
-    inventarioSection.style.display = 'none';
+    authIcon.textContent = '🔐';
+    authText.textContent = 'Iniciar sesión';
+    inventario.style.display = 'none';
+    profileMenu.style.display = 'none';
   }
 }
+
+
+  document.getElementById('logout-btn').onclick = () => {
+  localStorage.removeItem('userToken');
+  actualizarEstadoUI();
+};
+
 
     // ----------------------------------------------------------------------
     // EJECUCIÓN AL CARGAR EL DOCUMENTO
@@ -361,7 +389,8 @@
     document.addEventListener('DOMContentLoaded', () => {
   
   verificarEstadoLogin(); 
-  actualizarInventarioUI();
+  actualizarEstadoUI();
+
 
   // BOTONES DEL MODAL
   document.getElementById('login-btn').addEventListener('click', manejarLogin);
@@ -375,8 +404,21 @@
   const authModal = document.getElementById('auth-modal');
 
   document.getElementById('btn-auth').onclick = () => {
+  const token = localStorage.getItem('userToken');
+
+  if (!token) {
+    // NO hay sesión → abrir login
     authModal.classList.add('active');
-  };
+  } else {
+    // SÍ hay sesión → abrir menú de perfil
+    toggleProfileMenu();
+  }
+};
+
+function toggleProfileMenu() {
+  const menu = document.getElementById('profile-menu');
+  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
 
   document.getElementById('close-auth').onclick = () => {
     authModal.classList.remove('active');
@@ -405,7 +447,21 @@
           slides.style.transform = `translateX(-${index * 100}%)`;
       }
     }, 3000);
+function actualizarBotonAuth() {
+  const token = localStorage.getItem('userToken');
+  
 
+  const icon = document.getElementById('auth-icon');
+  const text = document.getElementById('auth-text');
+
+  if (token ) {
+    icon.textContent = '👤';
+    text.textContent = `Bienvenido`;
+  } else {
+    icon.textContent = '🔐';
+    text.textContent = 'Iniciar sesión';
+  }
+}
 </script>
 
 </body>
