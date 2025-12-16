@@ -65,13 +65,10 @@ def register_usuario():
 
 @app.route('/api/login', methods=['POST'])
 def login_usuario():
-    """Verifica las credenciales del usuario."""
-    
-    # Implementamos el mismo try/except para el login
     try:
         datos_login = request.get_json()
     except Exception:
-        return jsonify({"mensaje": "Error en la petición: El cuerpo de la solicitud no es JSON válido."}), 400
+        return jsonify({"mensaje": "Error en la petición"}), 400
         
     if not datos_login or 'email' not in datos_login or 'password' not in datos_login:
         return jsonify({"mensaje": "Email y contraseña son requeridos"}), 400
@@ -80,15 +77,17 @@ def login_usuario():
     password = datos_login['password']
     
     if email in USUARIOS and USUARIOS[email] == password:
-        # Éxito: Retorna un token simulado
+        #  DEFINICIÓN DEL ROL 
+        role = "admin" if email == "admin@motopower.com" else "user"
+
         return jsonify({
             "mensaje": "Inicio de sesión exitoso",
-            "token": f"fake_jwt_{email}_hash", 
-            "usuario": email
+            "token": f"fake_jwt_{email}_hash",
+            "usuario": email,
+            "role": role
         }), 200
     else:
-        # Fallo: Credenciales inválidas
-        return jsonify({"mensaje": "Credenciales inválidas. Verifica tu email y contraseña."}), 401
+        return jsonify({"mensaje": "Credenciales inválidas"}), 401
 
 @app.route('/api/inventario', methods=['GET'])
 def obtener_inventario():
