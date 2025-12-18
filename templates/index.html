@@ -35,6 +35,14 @@
     .slides img { width: 100%; flex-shrink: 0; }
   </style>
 </head>
+
+<div id="carrito-panel" class="carrito-panel">
+  <h3>🛒 Tu carrito</h3>
+  <ul id="lista-carrito"></ul>
+  <p id="total-carrito"></p>
+  <button onclick="vaciarCarrito()">Vaciar</button>
+</div>
+
 <body>
 
 <header>
@@ -44,7 +52,8 @@
     </div>
     <p>Velocidad, potencia y estilo sobre dos ruedas </p>
    
-    <button class="btn-carrito" onclick="toggleCarrito()">
+    <button class="btn-carrito" id="btn-carrito" onclick="toggleCarrito()">
+
   🛒 Carrito (<span id="contador-carrito">0</span>)
 </button>
 
@@ -113,19 +122,50 @@
         <img src="https://www.motorbikemag.es/wp-content/uploads/2024/10/Kawasaki-Z900-2025-estaticas3.jpg"width="800" height="200" alt="Z900">
         <h3>Kawasaki Z900</h3>
         <p>Motor de 948cc, 123 HP. Ideal para los amantes de la potencia.</p>
-        <button onclick="alert('Agregada al carrito')">🛒 Comprar</button>
+       <button
+  onclick="agregarAlCarrito(
+    'Kawasaki Z900',
+    350000,
+    'https://www.motorbikemag.es/wp-content/uploads/2024/10/Kawasaki-Z900-2025-estaticas3.jpg'
+  )">
+  🛒 Comprar
+</button>
+
+
+
       </div>
       <div class="tarjeta">
         <img src="https://cdn.shopify.com/s/files/1/0066/0334/1924/files/moto-honda-CB650R-1_1024x1024.webp?v=1712321399"width="800" height="200" alt="CB650R">
         <h3>Honda CB650R</h3>
         <p>Motor 649cc, diseño naked agresivo y rendimiento confiable.</p>
-        <button onclick="alert('Agregada al carrito')">🛒 Comprar</button>
+       <button
+  onclick="agregarAlCarrito(
+    'Honda CB650R',
+    320000,
+    'https://cdn.shopify.com/s/files/1/0066/0334/1924/files/moto-honda-CB650R-1_1024x1024.webp?v=1712321399'
+  )">
+  🛒 Comprar
+</button>
+
+
+
+
       </div>
       <div class="tarjeta">
         <img src="https://autoshowtv.com.mx/wp-content/uploads/2024/11/YZF-R15-V4.jpg"width="800" height="200" alt="R15 V4">
         <h3>Yamaha R15 V4</h3>
         <p>Motor 155cc, ideal para ciudad con estilo deportivo.</p>
-        <button onclick="alert('Agregada al carrito')">🛒 Comprar</button>
+       <button
+  onclick="agregarAlCarrito(
+    'Yamaha R15 V4',
+    85000,
+    'https://autoshowtv.com.mx/wp-content/uploads/2024/11/YZF-R15-V4.jpg'
+  )">
+  🛒 Comprar
+</button>
+
+
+
       </div>
     </div>
   </section>
@@ -141,7 +181,8 @@
   </section>
   
  
-  <section id="inventario" class="inventario">
+  <section id="inventario" class="inventario" style="display:none;">
+
     <h2>Inventario Actual (Requiere Login)</h2>
     <table>
       <thead>
@@ -158,31 +199,6 @@
       </tbody>
     </table>
   </section>
-
-<section id="admin-form" class="inventario" style="display:none;">
-  <h2 id="form-title">Agregar Moto</h2>
-
-  <input type="hidden" id="moto-id">
-
-  <label>Modelo</label>
-  <input id="modelo">
-
-  <label>Marca</label>
-  <input id="marca">
-
-  <label>Cilindraje</label>
-  <input id="cilindraje">
-
-  <label>Disponibles</label>
-  <input id="disponibles" type="number">
-
-  <label>Precio</label>
-  <input id="precio" type="number">
-
-  <button id="guardar-moto">Guardar</button>
-  <button id="cancelar-edicion" style="display:none;">Cancelar</button>
-</section>
-
 
   <section id="contacto" class="contacto">
     <h2>Contáctanos</h2>
@@ -209,7 +225,7 @@
     </p>
 </footer>
 
-  <script type="module">
+  <script>
     
     // URL DE RENDER APLICADA para el backend
     const API_BASE_URL = "https://motoschingonas.onrender.com/api"; 
@@ -221,12 +237,16 @@
 
     function verificarEstadoLogin() {
   const token = localStorage.getItem('userToken');
+  const role = localStorage.getItem('userRole');
 
-  if (token) {
+  if (token && role === 'admin') {
     cargarInventario();
+    actualizarEstadoUI();
+  } else {
     actualizarEstadoUI();
   }
 }
+
 
 
     async function manejarRegistro(event) {
@@ -295,6 +315,7 @@
                 feedback.style.color = 'green';
                 
                 localStorage.setItem('userToken', resultado.token);
+
                 localStorage.setItem('userRole', resultado.role);
 
                 verificarEstadoLogin();
@@ -320,52 +341,42 @@
     // ----------------------------------------------------------------------
 
     async function cargarInventario() {
-  const token = localStorage.getItem('userToken');
-  const role = localStorage.getItem('userRole');
-  const tablaBody = document.getElementById('inventario-body');
 
-  if (!token || role !== 'admin') {
-    tablaBody.innerHTML = `<tr><td colspan="5">Acceso restringido</td></tr>`;
-    return;
-  }
+        const token = localStorage.getItem('userToken');
+        const tablaBody = document.getElementById('inventario-body');
+        
+        const role = localStorage.getItem('userRole');
+        if (role !== 'admin') return;
 
-  const url = `${API_BASE_URL}/inventario`;
 
-  try {
-    const response = await fetch(url, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "X-User-Role": role
-      }
-    });
+        if (!token) {
+            tablaBody.innerHTML = `<tr><td colspan="5">Inicia sesión para ver el inventario.</td></tr>`;
+            return;
+        }
 
-    if (!response.ok) {
-      tablaBody.innerHTML = `<tr><td colspan="5">Acceso denegado</td></tr>`;
-      return;
+        const url = `${API_BASE_URL}/inventario`;
+        
+        try {
+            const response = await fetch(url);
+            const inventario = await response.json();
+
+            tablaBody.innerHTML = ''; 
+
+            inventario.forEach(moto => {
+                const row = tablaBody.insertRow();
+                row.insertCell(0).textContent = moto.modelo;
+                row.insertCell(1).textContent = moto.marca;
+                row.insertCell(2).textContent = moto.cilindraje;
+                row.insertCell(3).textContent = moto.disponibles;
+                const precioFormateado = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(moto.precio);
+                row.insertCell(4).textContent = precioFormateado;
+            });
+
+        } catch (error) {
+            console.error('Error al cargar inventario:', error);
+            tablaBody.innerHTML = `<tr><td colspan="5">Error al cargar inventario: El servidor no responde o hay un problema de CORS.</td></tr>`;
+        }
     }
-
-    const inventario = await response.json();
-    tablaBody.innerHTML = '';
-
-    inventario.forEach(moto => {
-      const row = tablaBody.insertRow();
-      row.insertCell(0).textContent = moto.modelo;
-      row.insertCell(1).textContent = moto.marca;
-      row.insertCell(2).textContent = moto.cilindraje;
-      row.insertCell(3).textContent = moto.disponibles;
-      row.insertCell(4).textContent =
-        new Intl.NumberFormat('es-MX', {
-          style: 'currency',
-          currency: 'MXN'
-        }).format(moto.precio);
-    });
-
-  } catch (error) {
-    console.error(error);
-    tablaBody.innerHTML = `<tr><td colspan="5">Error del servidor</td></tr>`;
-  }
-}
-
     
     async function enviarFormularioContacto(event) {
         event.preventDefault(); 
@@ -409,17 +420,24 @@
   const authIcon = document.getElementById('auth-icon');
   const authText = document.getElementById('auth-text');
   const inventario = document.getElementById('inventario');
-  const adminForm = document.getElementById('admin-form');
   const profileMenu = document.getElementById('profile-menu');
   const botonCarrito = document.getElementById('btn-carrito');
 
-  if (token && role === 'admin') {
+  if (token) {
     authIcon.textContent = '👤';
-    authText.textContent = 'Admin';
-    inventario.style.display = 'block';
+    authText.textContent = role === 'admin' ? 'Admin' : 'Usuario';
+
+    if (botonCarrito) botonCarrito.style.display = 'block';
+
+    if (role === 'admin') {
+      inventario.style.display = 'block';
+    }
   } else {
     authIcon.textContent = '🔐';
     authText.textContent = 'Iniciar sesión';
+
+    if (botonCarrito) botonCarrito.style.display = 'none';
+
     inventario.style.display = 'none';
     profileMenu.style.display = 'none';
   }
@@ -428,10 +446,12 @@
 
 
 
-  document.getElementById('logout-btn').onclick = () => {
+document.getElementById('logout-btn').onclick = () => {
   localStorage.removeItem('userToken');
+  localStorage.removeItem('userRole');
   actualizarEstadoUI();
 };
+
 
 
     // ----------------------------------------------------------------------
@@ -590,10 +610,14 @@ document.addEventListener('click', function (event) {
   carritoPanel.style.display = 'none';
 });
 
+function cerrarSesion() {
+  localStorage.removeItem('userToken');
+  localStorage.removeItem('userRole');
+  actualizarEstadoUI();
+}
 
 
 </script>
 
 </body>
 </html>
- 
