@@ -373,3 +373,58 @@ header {
 #btn-carrito {
   display: none; /* OCULTO por defecto */
 }
+
+/* ===============================
+   ESTILO PANEL CARRITO
+================================ */
+
+.carrito-panel h3 {
+  background: #2ecc71; /* verde */
+  color: white;
+  padding: 12px;
+  margin: -15px -15px 10px -15px;
+  border-radius: 10px 10px 0 0;
+  text-align: center;
+  font-family: 'Segoe UI', 'Poppins', Arial, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Lista de productos */
+#lista-carrito {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+#lista-carrito li {
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+/* Total */
+#total-carrito {
+  font-weight: bold;
+  margin-top: 10px;
+  text-align: right;
+}
+
+/* Botón Vaciar */
+.carrito-panel button {
+  background: #e30613; /* rojo corporativo */
+  color: white;
+  border: none;
+  padding: 10px;
+  margin-top: 12px;
+  width: 100%;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.carrito-panel button:hover {
+  background: #a5050f;
+  transform: scale(1.02);
+}
