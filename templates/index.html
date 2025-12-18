@@ -214,6 +214,26 @@
   <button type="submit">Guardar</button>
 </form>
 
+<h2>Usuarios Registrados</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Email</th>
+      <th>Rol</th>
+      <th>Acciones</th>
+
+    </tr>
+  </thead>
+  <tbody id="usuarios-body">
+    <tr>
+      <td colspan="2">Cargando usuarios...</td>
+      
+    </tr>
+  </tbody>
+</table>
+
+
   </section>
 
   <section id="contacto" class="contacto">
@@ -324,6 +344,7 @@
   if (token) {
     if (role === 'admin') {
       cargarInventario();
+      cargarUsuarios();
     }
     actualizarEstadoUI();
   } else {
@@ -909,6 +930,76 @@ async function eliminarMoto(id) {
     console.error("Error al eliminar:", error);
     alert("Error de conexión");
   }
+}
+
+async function cargarUsuarios() {
+  const role = localStorage.getItem('userRole');
+  const tablaBody = document.getElementById('usuarios-body');
+
+  if (!tablaBody) return;
+  if (role !== 'admin') return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/usuarios`, {
+      headers: {
+        "X-User-Role": role
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error("No autorizado");
+    }
+
+    const usuarios = await response.json();
+    tablaBody.innerHTML = "";
+
+usuarios.forEach(usuario => {
+  const row = tablaBody.insertRow();
+
+  row.insertCell(0).textContent = usuario.email;
+  row.insertCell(1).textContent = usuario.role;
+
+  const acciones = row.insertCell(2);
+  acciones.innerHTML = `
+    <button onclick="cambiarRol('${usuario.email}')">🔄</button>
+    <button onclick="eliminarUsuario('${usuario.email}')">🗑️</button>
+  `;
+});
+
+
+  } catch (error) {
+    console.error("Error al cargar usuarios:", error);
+    tablaBody.innerHTML =
+      `<tr><td colspan="2">Error al cargar usuarios</td></tr>`;
+  }
+}
+
+async function eliminarUsuario(email) {
+  if (!confirm("¿Eliminar usuario?")) return;
+
+  await fetch(`${API_BASE_URL}/usuarios/${email}`, {
+    method: "DELETE",
+    headers: { "X-User-Role": "admin" }
+  });
+
+  cargarUsuarios();
+}
+
+async function cambiarRol(email) {
+  const nuevoRol = prompt("Nuevo rol (admin/user):");
+
+  if (!nuevoRol) return;
+
+  await fetch(`${API_BASE_URL}/usuarios/${email}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "X-User-Role": "admin"
+    },
+    body: JSON.stringify({ role: nuevoRol })
+  });
+
+  cargarUsuarios();
 }
 
 

@@ -13,9 +13,16 @@ CORS(app)
 # =========================================================================
 
 USUARIOS = {
-    "admin@motopower.com": "password123",  
-    "usuario@test.com": "prueba123",
+    "admin@motopower.com": {
+        "password": "password123",
+        "role": "admin"
+    },
+    "usuario@test.com": {
+        "password": "prueba123",
+        "role": "user"
+    }
 }
+
 
 INVENTARIO = [
     {"id": 1, "modelo": "Z900", "marca": "Kawasaki", "cilindraje": "948 cc", "disponibles": 5, "precio": 259900},
@@ -59,7 +66,11 @@ def register_usuario():
         return jsonify({"mensaje": f"El email {email} ya está registrado."}), 409 
 
     # 2. Simular el registro 
-    USUARIOS[email] = password
+    USUARIOS[email] = {
+    "password": password,
+    "role": "user"
+}
+
     
     # print(f"Nuevo usuario registrado: {email}. Total de usuarios: {len(USUARIOS)}") # Comentado para evitar posibles I/O errors en Render
     return jsonify({
@@ -80,9 +91,9 @@ def login_usuario():
     email = datos_login['email']
     password = datos_login['password']
     
-    if email in USUARIOS and USUARIOS[email] == password:
+    if email in USUARIOS and USUARIOS[email]["password"] == password:
         #  DEFINICIÓN DEL ROL 
-        role = "admin" if email == "admin@motopower.com" else "user"
+        role = USUARIOS[email]["role"]
 
         return jsonify({
             "mensaje": "Inicio de sesión exitoso",
@@ -145,6 +156,68 @@ def eliminar_moto(id):
     global INVENTARIO
     INVENTARIO = [m for m in INVENTARIO if m["id"] != id]
     return jsonify({"mensaje": "Moto eliminada"})
+
+@app.route('/api/usuarios', methods=['GET'])
+def obtener_usuarios():
+    if not es_admin(request):
+        return jsonify({"mensaje": "Acceso denegado"}), 403
+
+    lista_usuarios = []
+
+    for email, data in USUARIOS.items():
+     lista_usuarios.append({
+        "email": email,
+        "role": data["role"]
+    })
+
+
+    return jsonify(lista_usuarios)
+
+
+@app.route('/api/usuarios', methods=['POST'])
+def crear_usuario():
+    if not es_admin(request):
+        return jsonify({"mensaje": "Acceso denegado"}), 403
+
+    data = request.get_json()
+
+    email = data.get("email")
+    password = data.get("password")
+    role = data.get("role", "user")
+
+    if email in USUARIOS:
+        return jsonify({"mensaje": "Usuario ya existe"}), 409
+
+    USUARIOS[email] = {
+        "password": password,
+        "role": role
+    }
+
+    return jsonify({"mensaje": "Usuario creado"}), 201
+
+@app.route('/api/usuarios/<email>', methods=['PUT'])
+def editar_usuario(email):
+    if not es_admin(request):
+        return jsonify({"mensaje": "Acceso denegado"}), 403
+
+    if email not in USUARIOS:
+        return jsonify({"mensaje": "Usuario no encontrado"}), 404
+
+    data = request.get_json()
+    USUARIOS[email]["role"] = data.get("role", "user")
+
+    return jsonify({"mensaje": "Usuario actualizado"})
+
+@app.route('/api/usuarios/<email>', methods=['DELETE'])
+def eliminar_usuario(email):
+    if not es_admin(request):
+        return jsonify({"mensaje": "Acceso denegado"}), 403
+
+    if email == "admin@motopower.com":
+        return jsonify({"mensaje": "No puedes eliminar al admin"}), 400
+
+    USUARIOS.pop(email, None)
+    return jsonify({"mensaje": "Usuario eliminado"})
 
 
 
