@@ -23,6 +23,10 @@ INVENTARIO = [
     {"id": 3, "modelo": "R15 V4", "marca": "Yamaha", "cilindraje": "155 cc", "disponibles": 8, "precio": 105000},
 ]
 
+def es_admin(request):
+    role = request.headers.get("X-User-Role")
+    return role == "admin"
+
 MENSAJES = []
 
 # =========================================================================
@@ -91,8 +95,58 @@ def login_usuario():
 
 @app.route('/api/inventario', methods=['GET'])
 def obtener_inventario():
-    """Devuelve la lista completa de motos en el inventario."""
+    if not es_admin(request):
+        return jsonify({"mensaje": "Acceso denegado"}), 403
+
     return jsonify(INVENTARIO)
+
+@app.route('/api/inventario', methods=['POST'])
+def crear_moto():
+    if not es_admin(request):
+        return jsonify({"mensaje": "Acceso denegado"}), 403
+
+    data = request.get_json()
+    nuevo_id = max(m["id"] for m in INVENTARIO) + 1
+
+    nueva_moto = {
+        "id": nuevo_id,
+        "modelo": data["modelo"],
+        "marca": data["marca"],
+        "cilindraje": data["cilindraje"],
+        "disponibles": data["disponibles"],
+        "precio": data["precio"]
+    }
+
+    INVENTARIO.append(nueva_moto)
+    return jsonify(nueva_moto), 201
+
+
+
+@app.route('/api/inventario/<int:id>', methods=['PUT'])
+def editar_moto(id):
+    if not es_admin(request):
+        return jsonify({"mensaje": "Acceso denegado"}), 403
+
+    data = request.get_json()
+
+    for moto in INVENTARIO:
+        if moto["id"] == id:
+            moto.update(data)
+            return jsonify(moto)
+
+    return jsonify({"mensaje": "Moto no encontrada"}), 404
+
+
+@app.route('/api/inventario/<int:id>', methods=['DELETE'])
+def eliminar_moto(id):
+    if not es_admin(request):
+        return jsonify({"mensaje": "Acceso denegado"}), 403
+
+    global INVENTARIO
+    INVENTARIO = [m for m in INVENTARIO if m["id"] != id]
+    return jsonify({"mensaje": "Moto eliminada"})
+
+
 
 @app.route('/api/contacto', methods=['POST'])
 def recibir_contacto():
