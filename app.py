@@ -93,32 +93,9 @@ def login_usuario():
     else:
         return jsonify({"mensaje": "Credenciales inválidas"}), 401
 
-@app.route('/api/inventario', methods=['GET'])
-def obtener_inventario():
-    if not es_admin(request):
-        return jsonify({"mensaje": "Acceso denegado"}), 403
 
-    return jsonify(INVENTARIO)
 
-@app.route('/api/inventario', methods=['POST'])
-def crear_moto():
-    if not es_admin(request):
-        return jsonify({"mensaje": "Acceso denegado"}), 403
 
-    data = request.get_json()
-    nuevo_id = max(m["id"] for m in INVENTARIO) + 1
-
-    nueva_moto = {
-        "id": nuevo_id,
-        "modelo": data["modelo"],
-        "marca": data["marca"],
-        "cilindraje": data["cilindraje"],
-        "disponibles": data["disponibles"],
-        "precio": data["precio"]
-    }
-
-    INVENTARIO.append(nueva_moto)
-    return jsonify(nueva_moto), 201
 
 
 
