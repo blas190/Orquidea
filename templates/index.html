@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MotoPower - Tienda de Motos</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+  <link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet/dist/leaflet.css"
+/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
   <style>
     /* Estilos básicos para las nuevas secciones (puedes moverlos a estilos.css) */
     .login, .contacto {
@@ -252,6 +258,10 @@
       <p id="mensaje-feedback" style="margin-top: 10px;"></p>
     </form>
   </section>
+<section id="mapa-section">
+  <h2>Concesionarias cercanas</h2>
+  <div id="mapa" style="height: 400px; width: 100%; border-radius: 10px;"></div>
+</section>
 
 <footer>
     <p>&copy; 2025 MotoPower - Todos los derechos reservados</p>
@@ -350,6 +360,23 @@
   } else {
     actualizarEstadoUI();
   }
+
+  fetch(`${API_BASE_URL}/carrito`, {
+  headers: {
+    "X-User-Email": localStorage.getItem("userEmail")
+  }
+})
+.then(res => res.json())
+.then(data => {
+  if (Array.isArray(data)) {
+    carrito = data;
+  } else {
+    carrito = [];
+  }
+  actualizarCarrito();
+});
+
+
 }
 
     async function manejarRegistro(event) {
@@ -424,6 +451,7 @@ document.getElementById('register-password').value = '';
 
       // Si el backend no maneja roles → usuario normal
       localStorage.setItem('userRole', resultado.role || 'user');
+      localStorage.setItem('userEmail', resultado.usuario);
 
       verificarEstadoLogin();
       actualizarEstadoUI();
@@ -432,7 +460,7 @@ document.getElementById('register-password').value = '';
         document.getElementById('auth-modal').classList.remove('active');
         feedback.textContent = '';
         document.getElementById('login-password').value = '';
-      }, 800);
+      },800);
 
     } else {
       feedback.textContent = resultado.mensaje || 'Credenciales inválidas';
@@ -444,6 +472,8 @@ document.getElementById('register-password').value = '';
     feedback.textContent = 'Error de conexión con el servidor';
     feedback.style.color = 'red';
   }
+  
+
 }
 
         
@@ -673,13 +703,32 @@ function toggleCarrito() {
 }
 
 function agregarAlCarrito(modelo, precio, imagen) {
+  if (!Array.isArray(carrito)) {
+    carrito = [];
+  }
+
   carrito.push({
-    modelo: modelo,
-    precio: precio,
-    imagen: imagen
+    modelo,
+    precio,
+    imagen,
+    cantidad: 1
   });
 
   actualizarCarrito();
+
+  fetch(`${API_BASE_URL}/carrito`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-User-Email": localStorage.getItem("userEmail")
+    },
+    body: JSON.stringify({
+      modelo,
+      precio,
+      imagen,
+      cantidad: 1
+    })
+  });
 }
 
 
@@ -1001,6 +1050,127 @@ async function cambiarRol(email) {
 
   cargarUsuarios();
 }
+
+async function buscarConcesionariasOSM(lat, lng, radioMetros = 5000) {
+
+  const query = `
+    [out:json];
+    (
+      node["shop"="motorcycle"](around:${radioMetros},${lat},${lng});
+      node["amenity"="motorcycle_dealer"](around:${radioMetros},${lat},${lng});
+      node["shop"="motorcycle_repair"](around:${radioMetros},${lat},${lng});
+    );
+    out;
+  `;
+
+  const url = "https://overpass-api.de/api/interpreter";
+
+  const response = await fetch(url, {
+    method: "POST",
+    body: query
+  });
+
+  const data = await response.json();
+  return data.elements;
+}
+let mapa;
+let marcadores = [];
+
+function limpiarMarcadores() {
+  marcadores.forEach(m => mapa.removeLayer(m));
+  marcadores = [];
+}
+
+async function iniciarMapa(lat, lng) {
+
+  if (!mapa) {
+    mapa = L.map('mapa').setView([lat, lng], 14);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(mapa);
+  }
+
+  limpiarMarcadores();
+
+  // Marcador usuario
+  const userMarker = L.marker([lat, lng])
+    .addTo(mapa)
+    .bindPopup("Tu ubicación")
+    .openPopup();
+
+  marcadores.push(userMarker);
+
+  const concesionarias = await buscarConcesionariasOSM(lat, lng, 10000); // 10 km
+
+  if (concesionarias.length === 0) {
+    alert("No se encontraron concesionarias cercanas");
+    return;
+  }
+
+  concesionarias.forEach(c => {
+    const nombre = c.tags.name || "Concesionaria de motos";
+    const marker = L.marker([c.lat, c.lon])
+      .addTo(mapa)
+      .bindPopup(nombre);
+
+    marcadores.push(marker);
+  });
+}
+
+function calcularDistancia(lat1, lon1, lat2, lon2) {
+  const R = 6371; // radio de la Tierra en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function obtenerConcesionariasCercanas(lat, lng, maxKm = 15) {
+  return concesionarias.filter(c => {
+    const distancia = calcularDistancia(lat, lng, c.lat, c.lng);
+    return distancia <= maxKm;
+  });
+}
+
+function iniciarMapa(lat, lng) {
+  const mapa = L.map('mapa').setView([lat, lng], 14);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(mapa);
+
+  // Usuario
+  L.marker([lat, lng])
+    .addTo(mapa)
+    .bindPopup("Tu ubicación")
+    .openPopup();
+
+  const cercanas = obtenerConcesionariasCercanas(lat, lng, 5);
+
+  if (cercanas.length === 0) {
+    alert("No hay concesionarias a menos de 5 km");
+  }
+
+  cercanas.forEach(c => {
+    const distancia = calcularDistancia(lat, lng, c.lat, c.lng).toFixed(2);
+
+    L.marker([c.lat, c.lng])
+      .addTo(mapa)
+      .bindPopup(`${c.nombre}<br>${distancia} km`);
+  });
+}
+navigator.geolocation.getCurrentPosition(
+  pos => iniciarMapa(pos.coords.latitude, pos.coords.longitude),
+  () => iniciarMapa(19.3576, -99.0721)
+);
 
 
 </script>

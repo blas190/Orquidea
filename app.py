@@ -13,15 +13,16 @@ CORS(app)
 # =========================================================================
 
 USUARIOS = {
+
     "admin@motopower.com": {
         "password": "password123",
-        "role": "admin"
-    },
-    "usuario@test.com": {
-        "password": "prueba123",
-        "role": "user"
+        "role": "admin",
+        "carrito": []
     }
 }
+
+    
+
 
 
 INVENTARIO = [
@@ -68,7 +69,8 @@ def register_usuario():
     # 2. Simular el registro 
     USUARIOS[email] = {
     "password": password,
-    "role": "user"
+    "role": "user",
+    "carrito": [] 
 }
 
     
@@ -190,7 +192,8 @@ def crear_usuario():
 
     USUARIOS[email] = {
         "password": password,
-        "role": role
+        "role": role,
+        "carrito": []
     }
 
     return jsonify({"mensaje": "Usuario creado"}), 201
@@ -239,6 +242,37 @@ def recibir_contacto():
     return jsonify({"mensaje": "¡Gracias! Hemos recibido tu mensaje."}), 201
 
 
+@app.route('/api/carrito', methods=['GET'])
+def obtener_carrito():
+    email = request.headers.get("X-User-Email")
+
+    if not email or email not in USUARIOS:
+        return jsonify({"mensaje": "No autorizado"}), 401
+
+    return jsonify(USUARIOS[email]["carrito"])
+
+
+@app.route('/api/carrito', methods=['POST'])
+def agregar_carrito():
+    email = request.headers.get("X-User-Email")
+    data = request.get_json()
+
+    if not email or email not in USUARIOS:
+        return jsonify({"mensaje": "No autorizado"}), 401
+
+    USUARIOS[email]["carrito"].append(data)
+    return jsonify({"mensaje": "Producto agregado"})
+
+@app.route('/api/carrito', methods=['DELETE'])
+def vaciar_carrito():
+    email = request.headers.get("X-User-Email")
+
+    if not email or email not in USUARIOS:
+        return jsonify({"mensaje": "No autorizado"}), 401
+
+    USUARIOS[email]["carrito"] = []
+    return jsonify({"mensaje": "Carrito vacío"})
+
 
 @app.route('/')
 def index():
@@ -250,3 +284,6 @@ def index():
 if __name__ == '__main__':
     # Usar host 0.0.0.0 y puerto 5000 para despliegue y pruebas locales
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+    
