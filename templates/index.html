@@ -36,13 +36,6 @@
   </style>
 </head>
 
-
-
-
-
-
-
-
 <body>
 
 <div id="carrito-panel" class="carrito-panel">
@@ -200,12 +193,27 @@
           <th>Cilindraje</th>
           <th>Disponibles</th>
           <th>Precio</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody id="inventario-body">
         <tr><td colspan="5">Inicia sesión para ver el inventario.</td></tr>
       </tbody>
     </table>
+    <h3>Agregar / Editar moto</h3>
+
+<form id="form-moto">
+  <input type="hidden" id="moto-id">
+
+  <input type="text" id="modelo" placeholder="Modelo" required>
+  <input type="text" id="marca" placeholder="Marca" required>
+  <input type="text" id="cilindraje" placeholder="Cilindraje" required>
+  <input type="number" id="disponibles" placeholder="Disponibles" required>
+  <input type="number" id="precio" placeholder="Precio" required>
+
+  <button type="submit">Guardar</button>
+</form>
+
   </section>
 
   <section id="contacto" class="contacto">
@@ -298,7 +306,11 @@
   <script>
     
     // URL DE RENDER APLICADA para el backend
-    const API_BASE_URL = "https://motoschingonas.onrender.com/api"; 
+    const API_BASE_URL =
+  location.hostname === "localhost" || location.hostname === "127.0.0.1"
+    ? "http://127.0.0.1:5000/api"
+    : "https://motoschingonas.onrender.com/api";
+
 
     
     // ----------------------------------------------------------------------
@@ -414,91 +426,66 @@ document.getElementById('register-password').value = '';
 }
 
         
-        const datosLogin = {
-            email: document.getElementById('login-email').value,
-            password: document.getElementById('login-password').value,
-        };
-
-        feedback.textContent = 'Verificando...';
-        feedback.style.color = 'gray';
-
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(datosLogin)
-            });
-
-            const resultado = await response.json();
-            
-            if (response.ok) {
-                // ÉXITO
-                feedback.textContent = `¡Bienvenido, ${resultado.usuario}!`;
-                feedback.style.color = 'green';
-                
-                localStorage.setItem('userToken', resultado.token);
-
-                localStorage.setItem('userRole', resultado.role);
-
-                verificarEstadoLogin();
-                actualizarEstadoUI();
-                document.getElementById('auth-modal').classList.remove('active');
-
-
-            } else {
-                // FALLO
-                feedback.textContent = resultado.mensaje;
-                feedback.style.color = 'red';
-            }
-
-        } catch (error) {
-            console.error('Error de conexión al intentar iniciar sesión:', error);
-            feedback.textContent = 'Error de conexión con el servidor.';
-            feedback.style.color = 'red';
-        }
-    
     
     // ----------------------------------------------------------------------
     // FUNCIONES DE INVENTARIO Y CONTACTO
     // ----------------------------------------------------------------------
 
     async function cargarInventario() {
+  const token = localStorage.getItem('userToken');
+  const role = localStorage.getItem('userRole');
+  const tablaBody = document.getElementById('inventario-body');
 
-        const token = localStorage.getItem('userToken');
-        const tablaBody = document.getElementById('inventario-body');
-        
-        const role = localStorage.getItem('userRole');
-        if (role !== 'admin') return;
+  if (!tablaBody) return;
 
+  if (!token) {
+    tablaBody.innerHTML = `<tr><td colspan="5">Inicia sesión para ver el inventario.</td></tr>`;
+    return;
+  }
 
-        if (!token) {
-            tablaBody.innerHTML = `<tr><td colspan="5">Inicia sesión para ver el inventario.</td></tr>`;
-            return;
-        }
+  if (role !== 'admin') {
+    tablaBody.innerHTML = `<tr><td colspan="5">No tienes permisos para ver el inventario.</td></tr>`;
+    return;
+  }
 
-        const url = `${API_BASE_URL}/inventario`;
-        
-        try {
-            const response = await fetch(url);
-            const inventario = await response.json();
+  try {
+    const response = await fetch(`${API_BASE_URL}/inventario`, {
+      headers: {
+        "X-User-Role": role
+      }
+    });
 
-            tablaBody.innerHTML = ''; 
-
-            inventario.forEach(moto => {
-                const row = tablaBody.insertRow();
-                row.insertCell(0).textContent = moto.modelo;
-                row.insertCell(1).textContent = moto.marca;
-                row.insertCell(2).textContent = moto.cilindraje;
-                row.insertCell(3).textContent = moto.disponibles;
-                const precioFormateado = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(moto.precio);
-                row.insertCell(4).textContent = precioFormateado;
-            });
-
-        } catch (error) {
-            console.error('Error al cargar inventario:', error);
-            tablaBody.innerHTML = `<tr><td colspan="5">Error al cargar inventario: El servidor no responde o hay un problema de CORS.</td></tr>`;
-        }
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status}`);
     }
+
+    const inventario = await response.json();
+    tablaBody.innerHTML = '';
+
+    inventario.forEach(moto => {
+      const row = tablaBody.insertRow();
+      row.insertCell(0).textContent = moto.modelo;
+      row.insertCell(1).textContent = moto.marca;
+      row.insertCell(2).textContent = moto.cilindraje;
+      row.insertCell(3).textContent = moto.disponibles;
+      row.insertCell(4).textContent = new Intl.NumberFormat(
+        'es-MX',
+        { style: 'currency', currency: 'MXN' }
+      ).format(moto.precio);
+      const acciones = row.insertCell(5);
+acciones.innerHTML = `
+  <button onclick="editarMoto(${moto.id})">✏️</button>
+  <button onclick="eliminarMoto(${moto.id})">🗑️</button>
+`;
+    });
+
+  } catch (error) {
+    console.error('Error al cargar inventario:', error);
+    tablaBody.innerHTML =
+      `<tr><td colspan="5">Error al cargar inventario.</td></tr>`;
+  }
+}
+
     
     async function enviarFormularioContacto(event) {
         event.preventDefault(); 
@@ -837,9 +824,95 @@ function cerrarSesion() {
   actualizarEstadoUI();
 }
 
+document.getElementById('form-moto').addEventListener('submit', guardarMoto);
+
+async function guardarMoto(e) {
+  e.preventDefault();
+
+  const id = document.getElementById('moto-id').value;
+  const role = localStorage.getItem('userRole');
+
+  if (role !== 'admin') return alert('No autorizado');
+
+  const moto = {
+    modelo: document.getElementById('modelo').value,
+    marca: document.getElementById('marca').value,
+    cilindraje: document.getElementById('cilindraje').value,
+    disponibles: Number(document.getElementById('disponibles').value),
+    precio: Number(document.getElementById('precio').value),
+  };
+
+  const url = id
+    ? `${API_BASE_URL}/inventario/${id}`
+    : `${API_BASE_URL}/inventario`;
+
+  const method = id ? 'PUT' : 'POST';
+
+  await fetch(url, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Role': 'admin'
+    },
+    body: JSON.stringify(moto)
+  });
+
+  document.getElementById('form-moto').reset();
+  document.getElementById('moto-id').value = '';
+
+  cargarInventario();
+}
+
+function editarMoto(id) {
+  fetch(`${API_BASE_URL}/inventario`, {
+    headers: { 'X-User-Role': 'admin' }
+  })
+    .then(res => res.json())
+    .then(inventario => {
+      const moto = inventario.find(m => m.id === id);
+
+      document.getElementById('moto-id').value = moto.id;
+      document.getElementById('modelo').value = moto.modelo;
+      document.getElementById('marca').value = moto.marca;
+      document.getElementById('cilindraje').value = moto.cilindraje;
+      document.getElementById('disponibles').value = moto.disponibles;
+      document.getElementById('precio').value = moto.precio;
+    });
+}
+
+
+async function eliminarMoto(id) {
+  const confirmar = confirm("¿Seguro que deseas eliminar esta moto?");
+  if (!confirmar) return;
+
+  const role = localStorage.getItem("userRole");
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/inventario/${id}`, {
+      method: "DELETE",
+      headers: {
+        "X-User-Role": role
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.mensaje || "Error al eliminar");
+      return;
+    }
+
+    alert("Moto eliminada correctamente");
+    cargarInventario(); // 🔄 refresca tabla
+
+  } catch (error) {
+    console.error("Error al eliminar:", error);
+    alert("Error de conexión");
+  }
+}
+
 
 </script>
 
 </body>
 </html>
-
