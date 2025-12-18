@@ -52,7 +52,8 @@
     </div>
     <p>Velocidad, potencia y estilo sobre dos ruedas </p>
    
-    <button class="btn-carrito" onclick="toggleCarrito()">
+    <button class="btn-carrito" id="btn-carrito" onclick="toggleCarrito()">
+
   🛒 Carrito (<span id="contador-carrito">0</span>)
 </button>
 
@@ -411,7 +412,7 @@
             feedback.style.color = 'red';
         }
     }
-    
+
    function actualizarEstadoUI() {
   const token = localStorage.getItem('userToken');
   const role = localStorage.getItem('userRole');
@@ -420,18 +421,28 @@
   const authText = document.getElementById('auth-text');
   const inventario = document.getElementById('inventario');
   const profileMenu = document.getElementById('profile-menu');
+  const botonCarrito = document.getElementById('btn-carrito');
 
-  if (token && role === 'admin') {
+  if (token) {
     authIcon.textContent = '👤';
-    authText.textContent = 'Admin';
-    inventario.style.display = 'block';
+    authText.textContent = role === 'admin' ? 'Admin' : 'Usuario';
+
+    if (botonCarrito) botonCarrito.style.display = 'block';
+
+    if (role === 'admin') {
+      inventario.style.display = 'block';
+    }
   } else {
     authIcon.textContent = '🔐';
     authText.textContent = 'Iniciar sesión';
+
+    if (botonCarrito) botonCarrito.style.display = 'none';
+
     inventario.style.display = 'none';
     profileMenu.style.display = 'none';
   }
 }
+
 
 
 
@@ -599,11 +610,15 @@ document.addEventListener('click', function (event) {
   carritoPanel.style.display = 'none';
 });
 
+function cerrarSesion() {
+  localStorage.removeItem('userToken');
+  localStorage.removeItem('userRole');
+  actualizarEstadoUI();
+}
 
 
 </script>
 
 </body>
-</html> 
-  
+</html>
  
