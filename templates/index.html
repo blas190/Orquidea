@@ -136,7 +136,8 @@
   </section>
   
  
-  <section id="inventario" class="inventario">
+  <section id="inventario" class="inventario" style="display:none;">
+
     <h2>Inventario Actual (Requiere Login)</h2>
     <table>
       <thead>
@@ -191,12 +192,16 @@
 
     function verificarEstadoLogin() {
   const token = localStorage.getItem('userToken');
+  const role = localStorage.getItem('userRole');
 
-  if (token) {
+  if (token && role === 'admin') {
     cargarInventario();
+    actualizarEstadoUI();
+  } else {
     actualizarEstadoUI();
   }
 }
+
 
 
     async function manejarRegistro(event) {
@@ -266,6 +271,8 @@
                 
                 localStorage.setItem('userToken', resultado.token);
 
+                localStorage.setItem('userRole', resultado.role);
+
                 verificarEstadoLogin();
                 actualizarEstadoUI();
                 document.getElementById('auth-modal').classList.remove('active');
@@ -289,9 +296,14 @@
     // ----------------------------------------------------------------------
 
     async function cargarInventario() {
+
         const token = localStorage.getItem('userToken');
         const tablaBody = document.getElementById('inventario-body');
         
+        const role = localStorage.getItem('userRole');
+        if (role !== 'admin') return;
+
+
         if (!token) {
             tablaBody.innerHTML = `<tr><td colspan="5">Inicia sesión para ver el inventario.</td></tr>`;
             return;
@@ -358,14 +370,16 @@
     
    function actualizarEstadoUI() {
   const token = localStorage.getItem('userToken');
+  const role = localStorage.getItem('userRole');
+
   const authIcon = document.getElementById('auth-icon');
   const authText = document.getElementById('auth-text');
   const inventario = document.getElementById('inventario');
   const profileMenu = document.getElementById('profile-menu');
 
-  if (token) {
+  if (token && role === 'admin') {
     authIcon.textContent = '👤';
-    authText.textContent = 'Bienvenido';
+    authText.textContent = 'Admin';
     inventario.style.display = 'block';
   } else {
     authIcon.textContent = '🔐';
@@ -376,10 +390,13 @@
 }
 
 
-  document.getElementById('logout-btn').onclick = () => {
+
+document.getElementById('logout-btn').onclick = () => {
   localStorage.removeItem('userToken');
+  localStorage.removeItem('userRole');
   actualizarEstadoUI();
 };
+
 
 
     // ----------------------------------------------------------------------
