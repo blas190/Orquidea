@@ -620,5 +620,36 @@ function cerrarSesion() {
 
 </script>
 
+<!-- MODAL CHECKOUT -->
+<div id="checkout-modal" class="checkout-modal">
+  <div class="checkout-panel">
+    <h2>Checkout</h2>
+
+    <form id="checkout-form">
+      <label>Nombre completo</label>
+      <input type="text" required>
+
+      <label>Correo electrónico</label>
+      <input type="email" required>
+
+      <label>Dirección</label>
+      <input type="text" required>
+
+      <label>Método de pago</label>
+      <select required>
+        <option value="">Selecciona</option>
+        <option>Tarjeta</option>
+        <option>Transferencia</option>
+        <option>Efectivo</option>
+      </select>
+
+      <button type="submit">Confirmar compra</button>
+    </form>
+
+    <div class="close-checkout" onclick="cerrarCheckout()">✖</div>
+  </div>
+</div>
+
+  
 </body>
 </html>
