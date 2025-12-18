@@ -36,6 +36,8 @@
   </style>
 </head>
 
+<body>
+
 <div id="carrito-panel" class="carrito-panel">
   <h3>🛒 Tu carrito</h3>
   <ul id="lista-carrito"></ul>
@@ -43,8 +45,6 @@
   <button onclick="vaciarCarrito()">Vaciar</button>
   <button class="btn-pagar" onclick="abrirCheckout()">Pagar</button>
 </div>
-
-<body>
 
 <header>
     <div class="logo">
@@ -226,6 +226,68 @@
     </p>
 </footer>
 
+<!-- MODAL CHECKOUT -->
+<div id="checkout-modal" class="checkout-modal">
+  <div class="checkout-panel">
+
+    <h2>Checkout</h2>
+
+    <form id="checkout-form">
+      <label>Nombre completo</label>
+      <input type="text" required>
+
+      <label>Correo electrónico</label>
+      <input type="email" required>
+
+      <label>Dirección</label>
+      <input type="text" required>
+
+      <label>Método de pago</label>
+      <select required>
+        <option value="">Selecciona</option>
+        <option>Tarjeta</option>
+        <option>Transferencia</option>
+        <option>Efectivo</option>
+      </select>
+
+      <button type="submit" id="btn-confirmar">
+  Confirmar compra
+</button>
+
+    </form>
+
+    <div class="close-checkout" onclick="cerrarCheckout()">✖</div>
+  </div>
+</div>
+
+<!-- MODAL PAGO -->
+<div id="pago-modal" class="checkout-modal">
+  <div class="checkout-panel">
+
+    <h2 id="titulo-pago">Pago</h2>
+
+    <form id="pago-form">
+      <div id="campos-pago"></div>
+
+      <button type="submit">
+        Pagar ahora
+      </button>
+    </form>
+
+    <div class="close-checkout" onclick="cerrarPago()">✖</div>
+
+  </div>
+</div>
+
+<!-- MODAL RESULTADO -->
+<div id="resultado-modal" class="checkout-modal">
+  <div class="checkout-panel resultado">
+    <h2 id="resultado-texto"></h2>
+    <div class="icono-resultado" id="icono-resultado"></div>
+  </div>
+</div>
+
+
   <script>
     
     // URL DE RENDER APLICADA para el backend
@@ -236,19 +298,19 @@
     // FUNCIONES DE LOGIN Y REGISTRO
     // ----------------------------------------------------------------------
 
-    function verificarEstadoLogin() {
+   function verificarEstadoLogin() {
   const token = localStorage.getItem('userToken');
   const role = localStorage.getItem('userRole');
 
-  if (token && role === 'admin') {
-    cargarInventario();
+  if (token) {
+    if (role === 'admin') {
+      cargarInventario();
+    }
     actualizarEstadoUI();
   } else {
     actualizarEstadoUI();
   }
 }
-
-
 
     async function manejarRegistro(event) {
         event.preventDefault();
@@ -277,7 +339,9 @@
             feedback.style.color = response.ok ? 'green' : 'red';
             
             if (response.ok) {
-                document.getElementById('formulario-registro').reset();
+               document.getElementById('register-email').value = '';
+document.getElementById('register-password').value = '';
+
             }
 
         } catch (error) {
@@ -288,10 +352,60 @@
     }
 
     async function manejarLogin(event) {
-        event.preventDefault(); 
-        
-        const url = `${API_BASE_URL}/login`;
-        const feedback = document.getElementById('login-feedback');
+  event.preventDefault();
+
+  const url = `${API_BASE_URL}/login`;
+  const feedback = document.getElementById('login-feedback');
+
+  const datosLogin = {
+    email: document.getElementById('login-email').value.trim(),
+    password: document.getElementById('login-password').value.trim(),
+  };
+
+  feedback.textContent = 'Verificando...';
+  feedback.style.color = 'gray';
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datosLogin)
+    });
+
+    const resultado = await response.json();
+    console.log("LOGIN BACKEND RESPONSE:", resultado);
+
+    if (response.ok && resultado.token) {
+      feedback.textContent = '¡Inicio de sesión exitoso!';
+      feedback.style.color = 'green';
+
+      // Guardar token
+      localStorage.setItem('userToken', resultado.token);
+
+      // Si el backend no maneja roles → usuario normal
+      localStorage.setItem('userRole', resultado.role || 'user');
+
+      verificarEstadoLogin();
+      actualizarEstadoUI();
+
+      setTimeout(() => {
+        document.getElementById('auth-modal').classList.remove('active');
+        feedback.textContent = '';
+        document.getElementById('login-password').value = '';
+      }, 800);
+
+    } else {
+      feedback.textContent = resultado.mensaje || 'Credenciales inválidas';
+      feedback.style.color = 'red';
+    }
+
+  } catch (error) {
+    console.error('Error de conexión:', error);
+    feedback.textContent = 'Error de conexión con el servidor';
+    feedback.style.color = 'red';
+  }
+}
+
         
         const datosLogin = {
             email: document.getElementById('login-email').value,
@@ -594,6 +708,105 @@ function vaciarCarrito() {
   actualizarCarrito();
 }
 
+/* ===== CHECKOUT ===== */
+
+function abrirCheckout() {
+  if (carrito.length === 0) {
+    alert("Tu carrito está vacío");
+    return;
+  }
+  document.getElementById("checkout-modal").classList.add("active");
+}
+
+function cerrarCheckout() {
+  document.getElementById("checkout-modal").classList.remove("active");
+}
+
+document.getElementById("checkout-form").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  cerrarCheckout(); // cierra datos personales
+  abrirPago();      // abre método de pago
+});
+/* ===== PASO 5 – ABRIR PAGO SEGÚN MÉTODO ===== */
+
+function abrirPago() {
+  const metodo = document.querySelector('#checkout-form select').value;
+  const campos = document.getElementById("campos-pago");
+  const titulo = document.getElementById("titulo-pago");
+
+  if (!metodo) {
+    alert("Selecciona un método de pago");
+    return;
+  }
+
+  campos.innerHTML = "";
+  titulo.textContent = `Pago con ${metodo}`;
+
+  if (metodo === "Tarjeta") {
+    campos.innerHTML = `
+      <label>Número de tarjeta</label>
+      <input required placeholder="1234 5678 9012 3456">
+
+      <label>Fecha</label>
+      <input required placeholder="MM/AA">
+
+      <label>CVV</label>
+      <input required placeholder="123">
+    `;
+  }
+
+  if (metodo === "Transferencia") {
+    campos.innerHTML = `
+      <p>CLABE: <b>012345678901234567</b></p>
+      <p>Banco: BBVA</p>
+    `;
+  }
+
+  if (metodo === "Efectivo") {
+    campos.innerHTML = `
+      <p>Código de pago:</p>
+      <h3>${Math.floor(Math.random() * 900000) + 100000}</h3>
+    `;
+  }
+
+  document.getElementById("pago-modal").classList.add("active");
+}
+
+function cerrarPago() {
+  document.getElementById("pago-modal").classList.remove("active");
+}
+
+/* ===== PASO 6 – PROCESAR PAGO ===== */
+
+document.getElementById("pago-form").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  cerrarPago(); // cerrar modal de pago
+
+  const aprobado = Math.random() > 0.3; // 70% éxito
+
+  const modal = document.getElementById("resultado-modal");
+  const texto = document.getElementById("resultado-texto");
+  const icono = document.getElementById("icono-resultado");
+
+  if (aprobado) {
+    texto.textContent = "Pago aprobado 🎉";
+    icono.textContent = "✅";
+    vaciarCarrito();
+  } else {
+    texto.textContent = "Pago rechazado ❌";
+    icono.textContent = "⚠️";
+  }
+
+  modal.classList.add("active");
+
+  setTimeout(() => {
+    modal.classList.remove("active");
+  }, 3000);
+});
+
+
 document.addEventListener('click', function (event) {
   const carritoPanel = document.getElementById('carrito-panel');
   const botonCarrito = document.querySelector('.btn-carrito');
@@ -620,36 +833,6 @@ function cerrarSesion() {
 
 </script>
 
-<!-- MODAL CHECKOUT -->
-<div id="checkout-modal" class="checkout-modal">
-  <div class="checkout-panel">
-    <h2>Checkout</h2>
-
-    <form id="checkout-form">
-      <label>Nombre completo</label>
-      <input type="text" required>
-
-      <label>Correo electrónico</label>
-      <input type="email" required>
-
-      <label>Dirección</label>
-      <input type="text" required>
-
-      <label>Método de pago</label>
-      <select required>
-        <option value="">Selecciona</option>
-        <option>Tarjeta</option>
-        <option>Transferencia</option>
-        <option>Efectivo</option>
-      </select>
-
-      <button type="submit">Confirmar compra</button>
-    </form>
-
-    <div class="close-checkout" onclick="cerrarCheckout()">✖</div>
-  </div>
-</div>
-
-  
 </body>
 </html>
+
