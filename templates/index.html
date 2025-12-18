@@ -35,6 +35,15 @@
     .slides img { width: 100%; flex-shrink: 0; }
   </style>
 </head>
+
+<div id="carrito-panel" class="carrito-panel">
+  <h3>🛒 Tu carrito</h3>
+  <ul id="lista-carrito"></ul>
+  <p id="total-carrito"></p>
+  <button onclick="vaciarCarrito()">Vaciar</button>
+</div>
+
+  
 <body>
 
 <header>
@@ -43,6 +52,11 @@
       <h1>MotoPower</h1>
     </div>
     <p>Velocidad, potencia y estilo sobre dos ruedas </p>
+   
+    <button class="btn-carrito" onclick="toggleCarrito()">
+  🛒 Carrito (<span id="contador-carrito">0</span>)
+</button>
+
 </header>
 
   <nav class="botones">
@@ -204,7 +218,7 @@
     </p>
 </footer>
 
-  <script type="module">
+  <script>
     
     // URL DE RENDER APLICADA para el backend
     const API_BASE_URL = "https://motoschingonas.onrender.com/api"; 
@@ -503,8 +517,87 @@ function actualizarBotonAuth() {
     text.textContent = 'Iniciar sesión';
   }
 }
+
+let carrito = [];
+
+function toggleCarrito() {
+  const panel = document.getElementById("carrito-panel");
+  panel.style.display = panel.style.display === "block" ? "none" : "block";
+}
+
+function agregarAlCarrito(modelo, precio, imagen) {
+  carrito.push({
+    modelo: modelo,
+    precio: precio,
+    imagen: imagen
+  });
+
+  actualizarCarrito();
+}
+
+
+
+function actualizarCarrito() {
+  const lista = document.getElementById("lista-carrito");
+  const totalTexto = document.getElementById("total-carrito");
+  const contador = document.getElementById("contador-carrito");
+
+  lista.innerHTML = "";
+  let total = 0;
+
+  carrito.forEach(item => {
+    const li = document.createElement("li");
+li.style.display = "flex";
+li.style.alignItems = "center";
+li.style.marginBottom = "10px";
+
+const img = document.createElement("img");
+img.src = item.imagen;
+img.style.width = "60px";
+img.style.borderRadius = "6px";
+img.style.marginRight = "10px";
+
+const texto = document.createElement("span");
+texto.textContent = `${item.modelo} - $${item.precio.toLocaleString()}`;
+
+li.appendChild(img);
+li.appendChild(texto);
+lista.appendChild(li);
+
+    total += item.precio;
+  });
+
+  contador.textContent = carrito.length;
+  totalTexto.textContent = `Total: $${total.toLocaleString()}`;
+}
+
+function vaciarCarrito() {
+  carrito = [];
+  actualizarCarrito();
+}
+
+document.addEventListener('click', function (event) {
+  const carritoPanel = document.getElementById('carrito-panel');
+  const botonCarrito = document.querySelector('.btn-carrito');
+
+  // Si el carrito NO está abierto, no hacemos nada
+  if (carritoPanel.style.display !== 'block') return;
+
+  // Si el click fue dentro del carrito, NO cerrar
+  if (carritoPanel.contains(event.target)) return;
+
+  // Si el click fue en el botón carrito, NO cerrar
+  if (botonCarrito.contains(event.target)) return;
+
+  // Si fue fuera → cerrar carrito
+  carritoPanel.style.display = 'none';
+});
+
+
+
 </script>
 
 </body>
-</html>
+</html>  
+  
  
