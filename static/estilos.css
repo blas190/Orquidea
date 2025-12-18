@@ -370,3 +370,6 @@ header {
   z-index: 3000;
 }
 
+#btn-carrito {
+  display: none; /* OCULTO por defecto */
+}

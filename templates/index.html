@@ -43,6 +43,11 @@
       <h1>MotoPower</h1>
     </div>
     <p>Velocidad, potencia y estilo sobre dos ruedas </p>
+   
+    <button class="btn-carrito" onclick="toggleCarrito()">
+  🛒 Carrito (<span id="contador-carrito">0</span>)
+</button>
+
 </header>
 
   <nav class="botones">
@@ -396,7 +401,7 @@
             feedback.style.color = 'red';
         }
     }
-    
+
    function actualizarEstadoUI() {
   const token = localStorage.getItem('userToken');
   const role = localStorage.getItem('userRole');
@@ -406,25 +411,17 @@
   const inventario = document.getElementById('inventario');
   const adminForm = document.getElementById('admin-form');
   const profileMenu = document.getElementById('profile-menu');
+  const botonCarrito = document.getElementById('btn-carrito');
 
-  // Estado por defecto (todo oculto)
-  inventario.style.display = 'none';
-  if (adminForm) adminForm.style.display = 'none';
-  profileMenu.style.display = 'none';
-
-  if (token) {
+  if (token && role === 'admin') {
     authIcon.textContent = '👤';
-    authText.textContent = 'Bienvenido';
-
-    // SOLO ADMIN VE INVENTARIO
-    if (role === 'admin') {
-      inventario.style.display = 'block';
-      if (adminForm) adminForm.style.display = 'block';
-    }
-
+    authText.textContent = 'Admin';
+    inventario.style.display = 'block';
   } else {
     authIcon.textContent = '🔐';
     authText.textContent = 'Iniciar sesión';
+    inventario.style.display = 'none';
+    profileMenu.style.display = 'none';
   }
 }
 
@@ -517,6 +514,84 @@ function actualizarBotonAuth() {
     text.textContent = 'Iniciar sesión';
   }
 }
+
+let carrito = [];
+
+function toggleCarrito() {
+  const panel = document.getElementById("carrito-panel");
+  panel.style.display = panel.style.display === "block" ? "none" : "block";
+}
+
+function agregarAlCarrito(modelo, precio, imagen) {
+  carrito.push({
+    modelo: modelo,
+    precio: precio,
+    imagen: imagen
+  });
+
+  actualizarCarrito();
+}
+
+
+
+function actualizarCarrito() {
+  const lista = document.getElementById("lista-carrito");
+  const totalTexto = document.getElementById("total-carrito");
+  const contador = document.getElementById("contador-carrito");
+
+  lista.innerHTML = "";
+  let total = 0;
+
+  carrito.forEach(item => {
+    const li = document.createElement("li");
+li.style.display = "flex";
+li.style.alignItems = "center";
+li.style.marginBottom = "10px";
+
+const img = document.createElement("img");
+img.src = item.imagen;
+img.style.width = "60px";
+img.style.borderRadius = "6px";
+img.style.marginRight = "10px";
+
+const texto = document.createElement("span");
+texto.textContent = `${item.modelo} - $${item.precio.toLocaleString()}`;
+
+li.appendChild(img);
+li.appendChild(texto);
+lista.appendChild(li);
+
+    total += item.precio;
+  });
+
+  contador.textContent = carrito.length;
+  totalTexto.textContent = `Total: $${total.toLocaleString()}`;
+}
+
+function vaciarCarrito() {
+  carrito = [];
+  actualizarCarrito();
+}
+
+document.addEventListener('click', function (event) {
+  const carritoPanel = document.getElementById('carrito-panel');
+  const botonCarrito = document.querySelector('.btn-carrito');
+
+  // Si el carrito NO está abierto, no hacemos nada
+  if (carritoPanel.style.display !== 'block') return;
+
+  // Si el click fue dentro del carrito, NO cerrar
+  if (carritoPanel.contains(event.target)) return;
+
+  // Si el click fue en el botón carrito, NO cerrar
+  if (botonCarrito.contains(event.target)) return;
+
+  // Si fue fuera → cerrar carrito
+  carritoPanel.style.display = 'none';
+});
+
+
+
 </script>
 
 </body>
