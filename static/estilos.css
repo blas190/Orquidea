@@ -334,3 +334,41 @@ footer a:hover {
 .auth-container {
   position: relative;
 }
+
+header {
+  position: relative;
+}
+
+.btn-carrito {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+
+  background: white;
+  color: #e30613;
+  border: 2px solid white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-carrito:hover {
+  background: #e30613;
+  color: white;
+}
+
+.carrito-panel {
+  position: fixed;
+  top: 90px;
+  right: 20px;
+  width: 300px;
+  background: white;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  display: none;
+  z-index: 3000;
+}
+
+
