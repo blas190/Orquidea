@@ -334,7 +334,6 @@ footer a:hover {
 .auth-container {
   position: relative;
 }
-
 header {
   position: relative;
 }
@@ -370,5 +369,4 @@ header {
   display: none;
   z-index: 3000;
 }
-
 
