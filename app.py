@@ -277,10 +277,6 @@ def vaciar_carrito():
 @app.route('/')
 def index():
     return render_template('index.html')
-    
-@app.errorhandler(404)
-def pagina_no_encontrada(error):
-    return render_template("404.html"), 404
 # =========================================================================
 # INICIO DEL SERVIDOR
 # =========================================================================
