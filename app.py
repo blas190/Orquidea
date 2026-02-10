@@ -280,6 +280,10 @@ def index():
 # =========================================================================
 # INICIO DEL SERVIDOR
 # =========================================================================
+@app.errorhandler(404)
+def pagina_no_encontrada(e):
+    return render_template("404.html"), 404
+
 
 if __name__ == '__main__':
     # Usar host 0.0.0.0 y puerto 5000 para despliegue y pruebas locales
