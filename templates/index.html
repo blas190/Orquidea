@@ -16,34 +16,13 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   rel="stylesheet"
   href="https://unpkg.com/leaflet/dist/leaflet.css"
 />
+  <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&display=swap"
+        rel="stylesheet">
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <style>
-    /* Estilos básicos para las nuevas secciones (puedes moverlos a estilos.css) */
-    .login, .contacto {
-        max-width: 400px;
-        margin: 40px auto;
-        padding: 20px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-    }
-    .login h2, .contacto h2 {
-        text-align: center;
-        color: #f39c12;
-    }
-    .login button, .contacto button {
-        background-color: #f39c12;
-        color: white;
-        border: none;
-        padding: 10px;
-        cursor: pointer;
-        width: 100%;
-        margin-top: 15px;
-    }
+    
     /* Estilos generales (asumiendo que 'estilos.css' existe) */
-    .logo { display: flex; align-items: center; }
-    .logo img { width: 50px; margin-right: 10px; }
     .slides { display: flex; transition: transform 0.5s ease-in-out; }
     .slides img { width: 100%; flex-shrink: 0; }
   </style>
@@ -65,9 +44,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <header>
     <div class="logo">
-         <img src="https://static.vecteezy.com/system/resources/thumbnails/026/972/734/small/black-motorcycle-club-logo-isolated-png.png"width="200" height="80" alt="Logo MotoPower">
-      <h1>MotoPower</h1>
-    </div>
+  <div class="logo-curvo">
+    <svg viewBox="0 0 800 400">
+      <defs>
+        <path id="curva-arco"
+              d="M 100 280 Q 400 40 700 280" />
+      </defs>
+
+      <text text-anchor="middle">
+        <textPath href="#curva-arco" startOffset="50%">
+          MOTOPOWER
+        </textPath>
+      </text>
+    </svg>
+  </div>
+
+  <img src="https://static.vecteezy.com/system/resources/thumbnails/026/972/734/small/black-motorcycle-club-logo-isolated-png.png"
+       alt="Logo MotoPower">
+</div>
     <p>Velocidad, potencia y estilo sobre dos ruedas </p>
    
     <button class="btn-carrito" id="btn-carrito" onclick="toggleCarrito()">
@@ -78,10 +72,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </header>
 
   <nav class="botones">
-    <button onclick="window.location.href='#catalogo'">Catálogo</button>
+ <button onclick="abrirCatalogo()">Catálogo</button>
     <button onclick="window.location.href='#servicios'">Servicios</button>
-    <button onclick="window.location.href='#inventario'">Inventario</button>
-    <button onclick="window.location.href='#contacto'">Contacto</button>
+    <button id="btn-inventario" 
+        onclick="window.location.href='#inventario'"
+        style="display:none;">
+  Inventario
+</button>   
+    <button onclick="abrirContacto()">Contacto</button>
     <div class="auth-container">
   <button id="btn-auth" type="button">
     <span id="auth-icon">🔐</span>
@@ -134,7 +132,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </section>
 
   <section id="catalogo" class="catalogo">
+     <div class="close-catalogo" onclick="cerrarCatalogo()">✖</div>
     <h2>Catálogo de Motos</h2>
+    
+
     <div class="productos">
       <div class="tarjeta">
         <img src="https://www.motorbikemag.es/wp-content/uploads/2024/10/Kawasaki-Z900-2025-estaticas3.jpg"width="800" height="200" alt="Z900">
@@ -148,7 +149,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   )">
   🛒 Comprar
 </button>
-
+<button onclick="abrirModal({
+  modelo: 'Kawasaki Z900',
+  marca: 'Kawasaki',
+  cilindraje: '948 cc',
+  disponibles: 5,
+  precio: 350000
+})">
+  🔍 Ver detalles
+</button>
 
 
       </div>
@@ -164,7 +173,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   )">
   🛒 Comprar
 </button>
-
+<button onclick="abrirModal({
+  modelo: 'Honda CB650R',
+  marca: 'Honda',
+  cilindraje: '649 cc',
+  disponibles: 3,
+  precio: 320000
+})">
+  🔍 Ver detalles
+</button>
 
 
 
@@ -181,7 +198,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   )">
   🛒 Comprar
 </button>
-
+<button onclick="abrirModal({
+  modelo: 'Yamaha R15 V4',
+  marca: 'Yamaha',
+  cilindraje: '155 cc',
+  disponibles: 8,
+  precio: 85000
+})">
+  🔍 Ver detalles
+</button>
 
 
       </div>
@@ -253,22 +278,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   </section>
 
-  <section id="contacto" class="contacto">
+ <section id="contacto" class="contacto">
+
+  <div class="close-contacto" onclick="cerrarContacto()">✖</div>
+
+  <form id="formulario-contacto">
     <h2>Contáctanos</h2>
-    <form id="formulario-contacto"> 
-      <label for="nombre">Nombre:</label>
-      <input type="text" id="nombre" required>
 
-      <label for="correo">Correo electrónico:</label>
-      <input type="email" id="correo" required>
+    <label for="nombre">Nombre:</label>
+    <input type="text" id="nombre" required>
 
-      <label for="mensaje">Mensaje:</label>
-      <textarea id="mensaje" rows="4" required></textarea>
+    <label for="correo">Correo electrónico:</label>
+    <input type="email" id="correo" required>
 
-      <button type="submit">Enviar mensaje</button>
-      <p id="mensaje-feedback" style="margin-top: 10px;"></p>
-    </form>
-  </section>
+    <label for="mensaje">Mensaje:</label>
+    <textarea id="mensaje" rows="4" required></textarea>
+
+    <button type="submit">Enviar mensaje</button>
+    <p id="mensaje-feedback" style="margin-top: 10px;"></p>
+
+  </form>
+
+</section>
 <section id="mapa-section">
   <h2>Concesionarias cercanas</h2>
   <div id="mapa" style="height: 400px; width: 100%; border-radius: 10px;"></div>
@@ -591,6 +622,7 @@ acciones.innerHTML = `
   const authIcon = document.getElementById('auth-icon');
   const authText = document.getElementById('auth-text');
   const inventario = document.getElementById('inventario');
+  const btnInventario = document.getElementById('btn-inventario');
   const profileMenu = document.getElementById('profile-menu');
   const botonCarrito = document.getElementById('btn-carrito');
 
@@ -601,8 +633,13 @@ acciones.innerHTML = `
     if (botonCarrito) botonCarrito.style.display = 'block';
 
     if (role === 'admin') {
-      inventario.style.display = 'block';
-    }
+  inventario.style.display = 'block';
+  btnInventario.style.display = 'inline-block';
+} else {
+  inventario.style.display = 'none';
+  btnInventario.style.display = 'none';
+}
+
   } else {
     authIcon.textContent = '🔐';
     authText.textContent = 'Iniciar sesión';
@@ -610,6 +647,7 @@ acciones.innerHTML = `
     if (botonCarrito) botonCarrito.style.display = 'none';
 
     inventario.style.display = 'none';
+    btnInventario.style.display = 'none';
     profileMenu.style.display = 'none';
   }
 }
@@ -710,8 +748,9 @@ let carrito = [];
 
 function toggleCarrito() {
   const panel = document.getElementById("carrito-panel");
-  panel.style.display = panel.style.display === "block" ? "none" : "block";
+  panel.classList.toggle("active");
 }
+
 
 function agregarAlCarrito(modelo, precio, imagen) {
   if (!Array.isArray(carrito)) {
@@ -781,6 +820,13 @@ lista.appendChild(li);
 function vaciarCarrito() {
   carrito = [];
   actualizarCarrito();
+
+  fetch(`${API_BASE_URL}/carrito`, {
+    method: "DELETE",
+    headers: {
+      "X-User-Email": localStorage.getItem("userEmail")
+    }
+  });
 }
 
 /* ===== CHECKOUT ===== */
@@ -886,8 +932,8 @@ document.addEventListener('click', function (event) {
   const carritoPanel = document.getElementById('carrito-panel');
   const botonCarrito = document.querySelector('.btn-carrito');
 
-  // Si el carrito NO está abierto, no hacemos nada
-  if (carritoPanel.style.display !== 'block') return;
+  if (!carritoPanel.classList.contains('active')) return;
+
 
   // Si el click fue dentro del carrito, NO cerrar
   if (carritoPanel.contains(event.target)) return;
@@ -895,8 +941,8 @@ document.addEventListener('click', function (event) {
   // Si el click fue en el botón carrito, NO cerrar
   if (botonCarrito.contains(event.target)) return;
 
-  // Si fue fuera → cerrar carrito
-  carritoPanel.style.display = 'none';
+  carritoPanel.classList.remove('active');
+
 });
 
 function cerrarSesion() {
@@ -1129,61 +1175,81 @@ async function iniciarMapa(lat, lng) {
   });
 }
 
-function calcularDistancia(lat1, lon1, lat2, lon2) {
-  const R = 6371; // radio de la Tierra en km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) *
-    Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-function obtenerConcesionariasCercanas(lat, lng, maxKm = 15) {
-  return concesionarias.filter(c => {
-    const distancia = calcularDistancia(lat, lng, c.lat, c.lng);
-    return distancia <= maxKm;
-  });
-}
-
-function iniciarMapa(lat, lng) {
-  const mapa = L.map('mapa').setView([lat, lng], 14);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
-  }).addTo(mapa);
-
-  // Usuario
-  L.marker([lat, lng])
-    .addTo(mapa)
-    .bindPopup("Tu ubicación")
-    .openPopup();
-
-  const cercanas = obtenerConcesionariasCercanas(lat, lng, 5);
-
-  if (cercanas.length === 0) {
-    alert("No hay concesionarias a menos de 5 km");
-  }
-
-  cercanas.forEach(c => {
-    const distancia = calcularDistancia(lat, lng, c.lat, c.lng).toFixed(2);
-
-    L.marker([c.lat, c.lng])
-      .addTo(mapa)
-      .bindPopup(`${c.nombre}<br>${distancia} km`);
-  });
-}
 navigator.geolocation.getCurrentPosition(
   pos => iniciarMapa(pos.coords.latitude, pos.coords.longitude),
   () => iniciarMapa(19.3576, -99.0721)
 );
 
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") {
+    cerrarCatalogo();
+    cerrarContacto();
+  }
+});
+
+document.getElementById("catalogo").addEventListener("click", function(e){
+  if (e.target.id === "catalogo") {
+    cerrarCatalogo();
+  }
+});
+
+
 </script>
+
+<!-- Modal -->
+<div id="modalMoto" class="modal">
+  <div class="modal-contenido">
+    <span class="cerrar" onclick="cerrarModal()">&times;</span>
+    <h2 id="modalModelo"></h2>
+    <p><strong>Marca:</strong> <span id="modalMarca"></span></p>
+    <p><strong>Cilindraje:</strong> <span id="modalCilindraje"></span></p>
+    <p><strong>Disponibles:</strong> <span id="modalDisponibles"></span></p>
+    <p><strong>Precio:</strong> $<span id="modalPrecio"></span></p>
+  </div>
+</div>
+
+<script>
+function abrirModal(moto) {
+  document.getElementById("modalModelo").innerText = moto.modelo;
+  document.getElementById("modalMarca").innerText = moto.marca;
+  document.getElementById("modalCilindraje").innerText = moto.cilindraje;
+  document.getElementById("modalDisponibles").innerText = moto.disponibles;
+  document.getElementById("modalPrecio").innerText = moto.precio;
+
+  document.getElementById("modalMoto").style.display = "flex";
+}
+
+function cerrarModal() {
+  document.getElementById("modalMoto").style.display = "none";
+}
+
+function abrirCatalogo() {
+  const catalogo = document.getElementById("catalogo");
+  catalogo.classList.add("active");
+  document.body.style.overflow = "hidden"; // 🔥 bloquea scroll
+}
+
+function cerrarCatalogo() {
+  const catalogo = document.getElementById("catalogo");
+  catalogo.classList.remove("active");
+  document.body.style.overflow = "auto";
+}
+
+function abrirContacto() {
+  const contacto = document.getElementById("contacto");
+  contacto.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function cerrarContacto() {
+  const contacto = document.getElementById("contacto");
+  contacto.classList.remove("active");
+  document.body.style.overflow = "auto";
+}
+
+</script>
+
+
 
 </body>
 </html>
