@@ -4,6 +4,69 @@ body {
   margin: 0;
   background: #f8f8f8;
   color: #333;
+  scroll-behavior: smooth;
+}
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 10px;
+  background: #e30613;
+  color: white;
+  padding: 10px 14px;
+  z-index: 9999;
+  border-radius: 6px;
+  transition: top 0.2s ease;
+}
+.skip-link:focus {
+  top: 10px;
+}
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  min-width: 220px;
+  max-width: 320px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.85);
+  color: white;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.25);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 11000;
+  pointer-events: none;
+}
+.toast.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.toast-success {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+.toast-info {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button,
+input,
+select,
+textarea,
+a {
+  min-height: 44px;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 3px solid #ffd60a;
+  outline-offset: 3px;
 }
 
 /* ======== HEADER ======== */
@@ -61,6 +124,34 @@ nav.botones button:hover {
   align-items: center;
 }
 
+.alto-contraste body {
+  background: #000 !important;
+  color: #fff !important;
+}
+.alto-contraste header,
+.alto-contraste nav.botones,
+.alto-contraste .servicios,
+.alto-contraste .inventario,
+.alto-contraste .contacto,
+.alto-contraste .checkout-panel,
+.alto-contraste .modal-contenido,
+.alto-contraste .tarjeta {
+  background: #000 !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+.alto-contraste a {
+  color: #0ff !important;
+}
+.alto-contraste button,
+.alto-contraste input,
+.alto-contraste select,
+.alto-contraste textarea {
+  background: #111 !important;
+  color: #fff !important;
+  border: 1px solid #fff !important;
+}
+
 .slides img {
   max-height: 100%;
   max-width: 100%;
@@ -69,12 +160,16 @@ nav.botones button:hover {
 
 
 /* ======== CATÁLOGO ======== */
+html,
+body {
+  min-height: 100%;
+}
 .catalogo {
-  position: absolute;   /* 🔥 CAMBIO AQUÍ */
+  position: fixed;   /* fijado al viewport */
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
 
   backdrop-filter: blur(12px);
   background: rgba(0, 0, 0, 0.6);
@@ -83,6 +178,8 @@ nav.botones button:hover {
   z-index: 8000;
 
   overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
 
   display: flex;
   flex-direction: column;
@@ -244,6 +341,51 @@ th {
   color: #2ecc71;
 }
 
+/* ======== QUIÉNES SOMOS ======== */
+.nosotros {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 9000;
+  padding: 20px;
+}
+.nosotros.active {
+  display: flex;
+}
+.nosotros-panel {
+  background: white;
+  max-width: 720px;
+  width: 100%;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  color: #111;
+  position: relative;
+}
+.nosotros-panel h2 {
+  margin-top: 0;
+  color: #e30613;
+}
+.nosotros-panel p {
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+.close-nosotros {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
 /* ======== FOOTER ======== */
 footer {
   background: #111;
@@ -385,16 +527,17 @@ header {
   position: fixed;
   top: 90px;
   right: 20px;
-  width: 300px;
-  max-height: 80vh;
-  background: white;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  width: 340px;
+  max-height: 85vh;
+  background: rgba(255,255,255,0.97);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 26px;
+  padding: 20px 18px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.18);
   display: none;
   z-index: 3000;
-
   flex-direction: column;
+  backdrop-filter: blur(10px);
 }
 
 .carrito-panel.active {
@@ -427,16 +570,47 @@ header {
 #lista-carrito {
   list-style: none;
   padding: 0;
-  margin: 10px 0;
-  overflow-y: auto;     /* 🔥 scroll interno */
-  flex-grow: 1;         /* ocupa espacio disponible */
+  margin: 14px 0 12px;
+  overflow-y: auto;
+  max-height: 42vh;
+  flex-grow: 1;
 }
 
 
 #lista-carrito li {
-  padding: 6px 0;
-  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+#lista-carrito li:last-child {
+  margin-bottom: 0;
+}
+
+#lista-carrito li img {
+  width: 72px;
+  height: 52px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+#lista-carrito li strong {
+  display: block;
   font-size: 14px;
+  color: #222;
+}
+
+#lista-carrito li .item-price {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #666;
 }
 
 /* Total */
@@ -477,8 +651,10 @@ header {
   height: 100%;
   background: rgba(0, 0, 0, 0.6);
   display: none;               /* OCULTO POR DEFECTO */
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding: 20px 0;
+  overflow-y: auto;
   z-index: 99999;
 }
 
@@ -490,11 +666,13 @@ header {
   background: white;
   width: 400px;
   max-width: 90%;
+  max-height: calc(100vh - 40px);
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 8px 25px rgba(0,0,0,0.3);
   position: relative;
   animation: aparecer 0.3s ease;
+  overflow-y: auto;
 }
 
 @keyframes aparecer {
@@ -580,6 +758,87 @@ header {
   min-height: 20px;
   text-align: center;
   font-weight: bold;
+}
+
+#2fa-section {
+  margin-top: 15px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+#2fa-section label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+#2fa-code {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 16px;
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+#verify-2fa-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+#verify-2fa-btn:hover {
+  background-color: #218838;
+}
+
+#code-verification {
+  margin-top: 15px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+#code-verification label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+#verification-code {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 16px;
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+#send-code-btn, #verify-code-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+#send-code-btn:hover, #verify-code-btn:hover {
+  background-color: #0056b3;
 }
 
 .modal {
@@ -726,4 +985,111 @@ header .logo {
 header .logo img {
   width: 160px;
   margin-top: -60px;
+}
+#chat-container {
+    width: 300px;
+    margin: 20px auto;
+}
+
+#chat-box {
+    height: 300px;
+    border: 1px solid #ccc;
+    overflow-y: scroll;
+    padding: 10px;
+    background: #f9f9f9;
+}
+#chat-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    z-index: 9999;
+}
+
+#chat-box {
+    height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    background: #f9f9f9;
+}
+
+#chat-container input {
+    width: 70%;
+    padding: 5px;
+}
+
+#chat-container button {
+    width: 30%;
+}
+/* BOTÓN */
+#chat-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #007bff;
+    color: white;
+    font-size: 24px;
+    padding: 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+}
+
+/* CONTENEDOR */
+#chat-container {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 300px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    overflow: hidden;
+    z-index: 10000;
+}
+
+/* OCULTO */
+.hidden {
+    display: none;
+}
+
+/* HEADER */
+#chat-header {
+    background: #007bff;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+}
+
+/* MENSAJES */
+#chat-box {
+    height: 250px;
+    overflow-y: auto;
+    padding: 10px;
+    background: #f1f1f1;
+}
+
+/* INPUT */
+#chat-input-area {
+    display: flex;
+}
+
+#chat-input-area input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+}
+
+#chat-input-area button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
 }
