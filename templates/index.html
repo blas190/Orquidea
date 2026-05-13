@@ -19,6 +19,25 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&display=swap"
         rel="stylesheet">
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+<script>
+  let recaptchaSiteKey = '6LeaWuAsAAAAALVL1Qc32QlPpZdnHUhsw76HX4';
+  
+  // Esperar a que grecaptcha esté listo
+  function verificarGreCaptcha() {
+    if (window.grecaptcha) {
+      // reCAPTCHA está listo
+      console.log('reCAPTCHA cargado correctamente');
+    } else {
+      // Reintentar en 100ms
+      setTimeout(verificarGreCaptcha, 100);
+    }
+  }
+  
+  // Verificar cuando la página cargue
+  window.addEventListener('load', verificarGreCaptcha);
+</script>
 
   <style>
     
@@ -34,13 +53,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
+<a href="#main-content" class="skip-link">Saltar al contenido</a>
+
 <div id="carrito-panel" class="carrito-panel">
   <h3>🛒 Tu carrito</h3>
   <ul id="lista-carrito"></ul>
   <p id="total-carrito"></p>
   <button onclick="vaciarCarrito()">Vaciar</button>
-  <button class="btn-pagar" onclick="abrirCheckout()">Pagar</button>
+  <button class="btn-pagar" onclick="abrirCheckout()">Ir al pago</button>
 </div>
+<div id="toast" class="toast" aria-live="polite"></div>
 
 <header>
     <div class="logo">
@@ -71,17 +93,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 </header>
 
-  <nav class="botones">
- <button onclick="abrirCatalogo()">Catálogo</button>
-    <button onclick="window.location.href='#servicios'">Servicios</button>
+  <nav class="botones" role="navigation" aria-label="Navegación principal">
+ <button onclick="abrirCatalogo()" data-narrar="Abrir catálogo">Catálogo</button>
+    <button onclick="abrirNosotros()" data-narrar="Quiénes somos">Quiénes somos</button>
+    <button onclick="window.location.href='#servicios'" data-narrar="Ir a servicios">Servicios</button>
     <button id="btn-inventario" 
         onclick="window.location.href='#inventario'"
-        style="display:none;">
+        style="display:none;"
+        data-narrar="Ver inventario">
   Inventario
 </button>   
-    <button onclick="abrirContacto()">Contacto</button>
+    <button onclick="abrirContacto()" data-narrar="Abrir contacto">Contacto</button>
+    <button id="btn-activar-narracion" type="button" aria-pressed="false" aria-label="Activar narración de elementos seleccionados">🔊 Narración OFF</button>
+    <button id="btn-contraste" type="button" aria-pressed="false" aria-label="Activar modo de alto contraste">🌓 Alto contraste</button>
     <div class="auth-container">
-  <button id="btn-auth" type="button">
+  <button id="btn-auth" type="button" aria-label="Abrir menú de usuario">
     <span id="auth-icon">🔐</span>
     <span id="auth-text">Iniciar sesión</span>
   </button>
@@ -93,29 +119,45 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
 
   </nav>
-  
-<div id="auth-modal">
+<main id="main-content">
+<div id="auth-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="auth-modal-title">
   <div class="auth-panel">
     <div class="close" id="close-auth">✖</div>
 
     <!-- LOGIN -->
     <div id="login-panel">
-      <h2>Iniciar sesión</h2>
-      <input type="email" id="login-email">
-      <input type="password" id="login-password">
+      <h2 id="auth-modal-title">Autenticación</h2>
+      <label for="login-email">Correo electrónico</label>
+      <input type="email" id="login-email" aria-label="Correo electrónico" placeholder="Correo electrónico" required>
+      <label for="login-password">Contraseña</label>
+      <input type="password" id="login-password" aria-label="Contraseña" placeholder="Contraseña" required>
       <button id="login-btn">Entrar</button>
-      <p id="login-feedback"></p>
-      <div class="switch" id="go-register">¿No tienes cuenta? Regístrate</div>
+      <div id="2fa-section" style="display:none;">
+        <label for="2fa-code">Código de verificación (2FA)</label>
+        <input type="text" id="2fa-code" aria-label="Código 2FA" placeholder="Ingresa el código de 6 dígitos" maxlength="6" required>
+        <button id="verify-2fa-btn">Verificar código</button>
+      </div>
+      <p id="login-feedback" role="status" aria-live="polite"></p>
+      <button class="switch" id="go-register" type="button">¿No tienes cuenta? Regístrate</button>
     </div>
 
     <!-- REGISTRO -->
     <div id="register-panel" style="display:none;">
       <h2>Registrarse</h2>
-      <input type="email" id="register-email">
-      <input type="password" id="register-password">
-      <button id="register-btn">Crear cuenta</button>
-      <p id="register-feedback"></p>
-      <div class="switch" id="go-login">¿Ya tienes cuenta? Inicia sesión</div>
+      <label for="register-email">Correo electrónico</label>
+      <input type="email" id="register-email" placeholder="Email" aria-label="Correo electrónico" required>
+      <button id="send-code-btn" type="button">Enviar código de verificación</button>
+      <div id="code-verification" style="display:none;">
+        <label for="verification-code">Código de verificación</label>
+        <input type="text" id="verification-code" placeholder="Ingresa el código de 6 dígitos" maxlength="6" aria-label="Código de verificación" required>
+        <button id="verify-code-btn" type="button">Verificar código</button>
+      </div>
+      <label for="register-password">Contraseña</label>
+      <input type="password" id="register-password" placeholder="Contraseña" aria-label="Contraseña" required>
+      <div id="recaptcha-register" class="g-recaptcha" data-sitekey="6LeaWuAsAAAAALVL1Qc32QlPpZdnHUhsw76HX4Pt" style="margin: 15px 0;"></div>
+      <button id="register-btn" style="display:none;">Crear cuenta</button>
+      <p id="register-feedback" role="status" aria-live="polite"></p>
+      <button class="switch" id="go-login" type="button">¿Ya tienes cuenta? Inicia sesión</button>
     </div>
 
   </div>
@@ -213,6 +255,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </section>
 
+  <section id="nosotros" class="nosotros" aria-modal="true" role="dialog" aria-hidden="true" aria-labelledby="nosotros-title">
+    <div class="nosotros-panel">
+      <button class="close-nosotros" onclick="cerrarNosotros()" aria-label="Cerrar quiénes somos">✖</button>
+      <h2 id="nosotros-title">Quiénes somos</h2>
+      <p>En MotoPower somos una empresa dedicada a ofrecer las mejores motos de ciudad, trabajo y deportivas en CDMX. Nuestra misión es ayudarte a encontrar la motocicleta ideal con atención personalizada, opciones de financiamiento y envío a todo México.</p>
+      <p>Contamos con años de experiencia en el mercado, un inventario actualizado y un equipo apasionado por las dos ruedas. Queremos que encuentres la mejor moto para tu estilo y necesidades.</p>
+      <p>Visítanos en nuestra sucursal, escríbenos por chat o contáctanos vía correo. Tu seguridad y satisfacción son nuestra prioridad.</p>
+    </div>
+  </section>
+
   <section id="servicios" class="servicios">
     <h2>Servicios disponibles</h2>
     <ul>
@@ -278,24 +330,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   </section>
 
- <section id="contacto" class="contacto">
+ <section id="contacto" class="contacto" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="contacto-title">
 
-  <div class="close-contacto" onclick="cerrarContacto()">✖</div>
+  <button class="close-contacto" onclick="cerrarContacto()" aria-label="Cerrar contacto">✖</button>
 
   <form id="formulario-contacto">
-    <h2>Contáctanos</h2>
+    <h2 id="contacto-title">Contáctanos</h2>
 
     <label for="nombre">Nombre:</label>
-    <input type="text" id="nombre" required>
+    <input type="text" id="nombre" aria-label="Nombre" required>
 
     <label for="correo">Correo electrónico:</label>
-    <input type="email" id="correo" required>
+    <input type="email" id="correo" aria-label="Correo electrónico" required>
 
     <label for="mensaje">Mensaje:</label>
-    <textarea id="mensaje" rows="4" required></textarea>
+    <textarea id="mensaje" rows="4" aria-label="Mensaje" required></textarea>
 
     <button type="submit">Enviar mensaje</button>
-    <p id="mensaje-feedback" style="margin-top: 10px;"></p>
+    <p id="mensaje-feedback" role="status" aria-live="polite" style="margin-top: 10px;"></p>
 
   </form>
 
@@ -305,6 +357,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div id="mapa" style="height: 400px; width: 100%; border-radius: 10px;"></div>
 </section>
 
+</main>
 <footer>
     <p>&copy; 2025 MotoPower - Todos los derechos reservados</p>
     <p>Síguenos en:
@@ -312,6 +365,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <a href="https://www.instagram.com/motp.ower?igsh=dTAwdm45aTRsNnBx" target="_blank">Instagram</a>
     </p>
 </footer>
+<script src="https://www.paypal.com/sdk/js?client-id=AXt0v99cTerIqmECOrT_Rp15i5-uK8Fh4YLIriKTAWFSEGWFYrRTbX98fy-MxGhPq1fj8F1sfFEzBJ20&currency=MXN"></script>
 
 <!-- MODAL CHECKOUT -->
 <div id="checkout-modal" class="checkout-modal">
@@ -330,15 +384,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <input type="text" required>
 
       <label>Método de pago</label>
-      <select required>
+      <select id="metodo-pago" required>
         <option value="">Selecciona</option>
         <option>Tarjeta</option>
         <option>Transferencia</option>
         <option>Efectivo</option>
+        <option>PayPal</option>
       </select>
 
       <button type="submit" id="btn-confirmar">
-  Confirmar compra
+  Confirmar orden
 </button>
 
     </form>
@@ -355,9 +410,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <form id="pago-form">
       <div id="campos-pago"></div>
-
-      <button type="submit">
-        Pagar ahora
+      <div id="paypal-button-container" style="margin-top:20px; display:none;"></div>
+      <button type="submit" id="btn-pago-regular">
+        Confirmar orden
       </button>
     </form>
 
@@ -388,7 +443,70 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // ----------------------------------------------------------------------
     // FUNCIONES DE LOGIN Y REGISTRO
     // ----------------------------------------------------------------------
+  async function realizarCompra() {
 
+    const userEmail = localStorage.getItem('usuarioEmail');
+
+    // 1. Enviar código al correo
+    const response = await fetch('/api/enviar-codigo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            email: userEmail
+        })
+    });
+
+    const data = await response.json();
+
+    alert(data.mensaje);
+
+    // 2. Pedir código al usuario
+    const codigo = prompt("Ingresa el código enviado a tu correo:");
+
+    if(!codigo){
+        return;
+    }
+
+    // 3. Verificar código
+    const verificacion = await fetch('/api/verificar-codigo', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            email: userEmail,
+            codigo: codigo
+        })
+    });
+
+    const resultado = await verificacion.json();
+
+    alert(resultado.mensaje);
+
+    // 4. Si el código es correcto → comprar
+    if(verificacion.ok){
+
+        const compra = await fetch('/api/checkout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Email': userEmail
+            }
+        });
+
+        const compraData = await compra.json();
+
+        alert(compraData.mensaje);
+
+        if(compraData.url){
+            window.location.href = compraData.url;
+        }
+
+    }
+
+}
    function verificarEstadoLogin() {
   const token = localStorage.getItem('userToken');
   const role = localStorage.getItem('userRole');
@@ -424,12 +542,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     async function manejarRegistro(event) {
         event.preventDefault();
 
+        // Verificar que se haya verificado el código
+        if (document.getElementById('register-btn').style.display === 'none') {
+            document.getElementById('register-feedback').textContent = 'Debes verificar tu correo antes de registrarte';
+            document.getElementById('register-feedback').style.color = 'red';
+            return;
+        }
+
         const url = `${API_BASE_URL}/register`;
         const feedback = document.getElementById('register-feedback');
+        
+        // Obtener respuesta del reCAPTCHA del widget de registro
+        const recaptchaResponse = grecaptcha.getResponse();
+        if (!recaptchaResponse) {
+            feedback.textContent = 'Por favor, completa el reCAPTCHA';
+            feedback.style.color = 'red';
+            return;
+        }
         
         const datosRegistro = {
             email: document.getElementById('register-email').value,
             password: document.getElementById('register-password').value,
+            'g-recaptcha-response': recaptchaResponse
         };
 
         feedback.textContent = 'Registrando...';
@@ -450,6 +584,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             if (response.ok) {
                document.getElementById('register-email').value = '';
 document.getElementById('register-password').value = '';
+document.getElementById('verification-code').value = '';
+document.getElementById('register-btn').style.display = 'none';
+document.getElementById('code-verification').style.display = 'none';
 
             }
 
@@ -502,8 +639,16 @@ document.getElementById('register-password').value = '';
         document.getElementById('auth-modal').classList.remove('active');
         feedback.textContent = '';
         document.getElementById('login-password').value = '';
+        document.getElementById('2fa-section').style.display = 'none';
+        document.getElementById('2fa-code').value = '';
       },800);
 
+    } else if (response.ok && resultado.requiere_2fa) {
+      // Mostrar sección 2FA
+      feedback.textContent = 'Credenciales válidas. Revisa tu correo para el código 2FA.';
+      feedback.style.color = 'blue';
+      document.getElementById('2fa-section').style.display = 'block';
+      document.getElementById('login-btn').style.display = 'none';
     } else {
       feedback.textContent = resultado.mensaje || 'Credenciales inválidas';
       feedback.style.color = 'red';
@@ -516,6 +661,151 @@ document.getElementById('register-password').value = '';
   }
   
 
+}
+
+async function manejarVerificar2FA(event) {
+  event.preventDefault();
+
+  const url = `${API_BASE_URL}/verificar-2fa`;
+  const feedback = document.getElementById('login-feedback');
+  const email = document.getElementById('login-email').value.trim();
+  const codigo = document.getElementById('2fa-code').value.trim();
+
+  if (!codigo || codigo.length !== 6) {
+    feedback.textContent = 'Ingresa un código de 6 dígitos válido';
+    feedback.style.color = 'red';
+    return;
+  }
+
+  feedback.textContent = 'Verificando código...';
+  feedback.style.color = 'gray';
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, codigo })
+    });
+
+    const resultado = await response.json();
+    console.log("2FA BACKEND RESPONSE:", resultado);
+
+    if (response.ok && resultado.token) {
+      feedback.textContent = '¡Inicio de sesión exitoso!';
+      feedback.style.color = 'green';
+
+      // Guardar token
+      localStorage.setItem('userToken', resultado.token);
+      localStorage.setItem('userRole', resultado.role || 'user');
+      localStorage.setItem('userEmail', resultado.usuario);
+
+      verificarEstadoLogin();
+      actualizarEstadoUI();
+
+      setTimeout(() => {
+        document.getElementById('auth-modal').classList.remove('active');
+        feedback.textContent = '';
+        document.getElementById('login-password').value = '';
+        document.getElementById('2fa-section').style.display = 'none';
+        document.getElementById('2fa-code').value = '';
+        document.getElementById('login-btn').style.display = 'block';
+      }, 800);
+    } else {
+      feedback.textContent = resultado.mensaje || 'Código inválido';
+      feedback.style.color = 'red';
+    }
+
+  } catch (error) {
+    console.error('Error de conexión:', error);
+    feedback.textContent = 'Error de conexión con el servidor';
+    feedback.style.color = 'red';
+  }
+}
+
+async function manejarEnviarCodigo(event) {
+  event.preventDefault();
+
+  const url = `${API_BASE_URL}/enviar-codigo`;
+  const feedback = document.getElementById('register-feedback');
+  const email = document.getElementById('register-email').value.trim();
+
+  if (!email) {
+    feedback.textContent = 'Ingresa un correo electrónico';
+    feedback.style.color = 'red';
+    return;
+  }
+
+  feedback.textContent = 'Enviando código...';
+  feedback.style.color = 'gray';
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const resultado = await response.json();
+    console.log("ENVIAR CODIGO RESPONSE:", resultado);
+
+    if (response.ok) {
+      feedback.textContent = 'Código enviado al correo. Revisa tu bandeja de entrada.';
+      feedback.style.color = 'green';
+      document.getElementById('code-verification').style.display = 'block';
+    } else {
+      feedback.textContent = resultado.mensaje || 'Error enviando código';
+      feedback.style.color = 'red';
+    }
+
+  } catch (error) {
+    console.error('Error de conexión:', error);
+    feedback.textContent = 'Error de conexión con el servidor';
+    feedback.style.color = 'red';
+  }
+}
+
+async function manejarVerificarCodigo(event) {
+  event.preventDefault();
+
+  const url = `${API_BASE_URL}/verificar-codigo`;
+  const feedback = document.getElementById('register-feedback');
+  const email = document.getElementById('register-email').value.trim();
+  const codigo = document.getElementById('verification-code').value.trim();
+
+  if (!codigo || codigo.length !== 6) {
+    feedback.textContent = 'Ingresa un código de 6 dígitos válido';
+    feedback.style.color = 'red';
+    return;
+  }
+
+  feedback.textContent = 'Verificando código...';
+  feedback.style.color = 'gray';
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, codigo })
+    });
+
+    const resultado = await response.json();
+    console.log("VERIFICAR CODIGO RESPONSE:", resultado);
+
+    if (response.ok) {
+      feedback.textContent = 'Correo verificado correctamente. Ahora puedes crear tu cuenta.';
+      feedback.style.color = 'green';
+      document.getElementById('register-btn').style.display = 'block';
+      document.getElementById('code-verification').style.display = 'none';
+    } else {
+      feedback.textContent = resultado.mensaje || 'Código inválido';
+      feedback.style.color = 'red';
+    }
+
+  } catch (error) {
+    console.error('Error de conexión:', error);
+    feedback.textContent = 'Error de conexión con el servidor';
+    feedback.style.color = 'red';
+  }
 }
 
         
@@ -589,7 +879,7 @@ acciones.innerHTML = `
         const datos = {
             nombre: document.getElementById('nombre').value,
             correo: document.getElementById('correo').value,
-            mensaje: document.getElementById('mensaje').value,
+            mensaje: document.getElementById('mensaje').value
         };
 
         try {
@@ -675,7 +965,10 @@ document.getElementById('logout-btn').onclick = () => {
 
   // BOTONES DEL MODAL
   document.getElementById('login-btn').addEventListener('click', manejarLogin);
+  document.getElementById('verify-2fa-btn').addEventListener('click', manejarVerificar2FA);
   document.getElementById('register-btn').addEventListener('click', manejarRegistro);
+  document.getElementById('send-code-btn').addEventListener('click', manejarEnviarCodigo);
+  document.getElementById('verify-code-btn').addEventListener('click', manejarVerificarCodigo);
 
   // FORMULARIO DE CONTACTO (ESTE SÍ EXISTE)
   document.getElementById('formulario-contacto')
@@ -689,6 +982,16 @@ document.getElementById('logout-btn').onclick = () => {
 
   if (!token) {
     // NO hay sesión → abrir login
+    // Reset 2FA section
+    document.getElementById('2fa-section').style.display = 'none';
+    document.getElementById('login-btn').style.display = 'block';
+    document.getElementById('2fa-code').value = '';
+    document.getElementById('login-feedback').textContent = '';
+    // Reset verification fields
+    document.getElementById('code-verification').style.display = 'none';
+    document.getElementById('register-btn').style.display = 'none';
+    document.getElementById('verification-code').value = '';
+    document.getElementById('register-feedback').textContent = '';
     authModal.classList.add('active');
   } else {
     // SÍ hay sesión → abrir menú de perfil
@@ -708,11 +1011,31 @@ function toggleProfileMenu() {
   document.getElementById('go-register').onclick = () => {
     document.getElementById('login-panel').style.display = 'none';
     document.getElementById('register-panel').style.display = 'block';
+    // Reset 2FA section
+    document.getElementById('2fa-section').style.display = 'none';
+    document.getElementById('login-btn').style.display = 'block';
+    document.getElementById('2fa-code').value = '';
+    document.getElementById('login-feedback').textContent = '';
+    // Reset verification fields
+    document.getElementById('code-verification').style.display = 'none';
+    document.getElementById('register-btn').style.display = 'none';
+    document.getElementById('verification-code').value = '';
+    document.getElementById('register-feedback').textContent = '';
   };
 
   document.getElementById('go-login').onclick = () => {
     document.getElementById('register-panel').style.display = 'none';
     document.getElementById('login-panel').style.display = 'block';
+    // Reset 2FA section
+    document.getElementById('2fa-section').style.display = 'none';
+    document.getElementById('login-btn').style.display = 'block';
+    document.getElementById('2fa-code').value = '';
+    document.getElementById('login-feedback').textContent = '';
+    // Reset verification fields
+    document.getElementById('code-verification').style.display = 'none';
+    document.getElementById('register-btn').style.display = 'none';
+    document.getElementById('verification-code').value = '';
+    document.getElementById('register-feedback').textContent = '';
   };
 });
 
@@ -765,6 +1088,7 @@ function agregarAlCarrito(modelo, precio, imagen) {
   });
 
   actualizarCarrito();
+  mostrarToast(`"${modelo}" agregado al carrito.`, 'success');
 
   fetch(`${API_BASE_URL}/carrito`, {
     method: "POST",
@@ -793,28 +1117,43 @@ function actualizarCarrito() {
 
   carrito.forEach(item => {
     const li = document.createElement("li");
-li.style.display = "flex";
-li.style.alignItems = "center";
-li.style.marginBottom = "10px";
+    li.style.display = "flex";
+    li.style.alignItems = "center";
+    li.style.marginBottom = "10px";
 
-const img = document.createElement("img");
-img.src = item.imagen;
-img.style.width = "60px";
-img.style.borderRadius = "6px";
-img.style.marginRight = "10px";
+    const img = document.createElement("img");
+    img.src = item.imagen;
+    img.style.width = "70px";
+    img.style.height = "55px";
+    img.style.objectFit = "cover";
+    img.style.borderRadius = "12px";
+    img.style.marginRight = "12px";
 
-const texto = document.createElement("span");
-texto.textContent = `${item.modelo} - $${item.precio.toLocaleString()}`;
+    const detalles = document.createElement("div");
+    detalles.innerHTML = `<strong>${item.modelo}</strong><span class="item-price">$${item.precio.toLocaleString()}</span>`;
 
-li.appendChild(img);
-li.appendChild(texto);
-lista.appendChild(li);
+    li.appendChild(img);
+    li.appendChild(detalles);
+    lista.appendChild(li);
 
     total += item.precio;
   });
 
   contador.textContent = carrito.length;
   totalTexto.textContent = `Total: $${total.toLocaleString()}`;
+}
+
+function mostrarToast(mensaje, tipo = 'info') {
+  const toast = document.getElementById('toast');
+  toast.textContent = mensaje;
+  toast.className = `toast toast-${tipo}`;
+  toast.setAttribute('aria-live', 'polite');
+  toast.classList.add('visible');
+
+  clearTimeout(window.toastTimeout);
+  window.toastTimeout = setTimeout(() => {
+    toast.classList.remove('visible');
+  }, 2800);
 }
 
 function vaciarCarrito() {
@@ -851,10 +1190,51 @@ document.getElementById("checkout-form").addEventListener("submit", function (e)
 });
 /* ===== PASO 5 – ABRIR PAGO SEGÚN MÉTODO ===== */
 
+let paypalButtonsRendered = false;
+
+function crearPayPalButtons() {
+  if (!window.paypal || paypalButtonsRendered) return;
+
+  paypal.Buttons({
+    createOrder: function(data, actions) {
+      let total = carrito.reduce((sum, item) => sum + item.precio, 0);
+      return actions.order.create({
+        purchase_units: [{
+          amount: {
+            value: total.toFixed(2)
+          }
+        }]
+      });
+    },
+    onApprove: function(data, actions) {
+      return actions.order.capture().then(function(details) {
+        cerrarPago();
+        vaciarCarrito();
+        actualizarCarrito();
+        mostrarResultado(
+          "Pago completado con PayPal. Gracias, " + details.payer.name.given_name + ".",
+          "✅"
+        );
+      });
+    },
+    onError: function(err) {
+      console.error('PayPal error', err);
+      mostrarResultado('Ocurrió un error con PayPal. Intenta de nuevo.', '⚠️');
+    }
+  }).render('#paypal-button-container');
+
+  paypalButtonsRendered = true;
+}
+
+let pagoSeleccionado = null;
+
 function abrirPago() {
   const metodo = document.querySelector('#checkout-form select').value;
+  pagoSeleccionado = metodo;
   const campos = document.getElementById("campos-pago");
   const titulo = document.getElementById("titulo-pago");
+  const paypalContainer = document.getElementById('paypal-button-container');
+  const btnRegular = document.getElementById('btn-pago-regular');
 
   if (!metodo) {
     alert("Selecciona un método de pago");
@@ -863,6 +1243,9 @@ function abrirPago() {
 
   campos.innerHTML = "";
   titulo.textContent = `Pago con ${metodo}`;
+  paypalContainer.style.display = 'none';
+  btnRegular.style.display = 'block';
+  btnRegular.textContent = 'Confirmar orden';
 
   if (metodo === "Tarjeta") {
     campos.innerHTML = `
@@ -878,17 +1261,29 @@ function abrirPago() {
   }
 
   if (metodo === "Transferencia") {
+    const clabe = '012345678901234567';
     campos.innerHTML = `
-      <p>CLABE: <b>012345678901234567</b></p>
-      <p>Banco: BBVA</p>
+      <p>Por transferencia bancaria, usa los siguientes datos:</p>
+      <p><strong>Banco:</strong> BBVA</p>
+      <p><strong>CLABE:</strong> <code>${clabe}</code></p>
+      <p>Cuando realices el pago, presiona el botón para confirmar tu orden.</p>
     `;
   }
 
   if (metodo === "Efectivo") {
+    const codigo = Math.floor(Math.random() * 900000) + 100000;
     campos.innerHTML = `
-      <p>Código de pago:</p>
-      <h3>${Math.floor(Math.random() * 900000) + 100000}</h3>
+      <p>Pago en efectivo en tienda.</p>
+      <p>Presenta este código al llegar:</p>
+      <h3>${codigo}</h3>
+      <p>Cuando tengas el efectivo, presiona el botón para confirmar tu orden.</p>
     `;
+  }
+
+  if (metodo === "PayPal") {
+    paypalContainer.style.display = 'block';
+    btnRegular.style.display = 'none';
+    crearPayPalButtons();
   }
 
   document.getElementById("pago-modal").classList.add("active");
@@ -898,33 +1293,52 @@ function cerrarPago() {
   document.getElementById("pago-modal").classList.remove("active");
 }
 
-/* ===== PASO 6 – PROCESAR PAGO ===== */
-
-document.getElementById("pago-form").addEventListener("submit", function (e) {
-  e.preventDefault();
-
-  cerrarPago(); // cerrar modal de pago
-
-  const aprobado = Math.random() > 0.3; // 70% éxito
-
+function mostrarResultado(mensaje, icono) {
   const modal = document.getElementById("resultado-modal");
   const texto = document.getElementById("resultado-texto");
-  const icono = document.getElementById("icono-resultado");
+  const iconoEl = document.getElementById("icono-resultado");
 
-  if (aprobado) {
-    texto.textContent = "Pago aprobado 🎉";
-    icono.textContent = "✅";
-    vaciarCarrito();
-  } else {
-    texto.textContent = "Pago rechazado ❌";
-    icono.textContent = "⚠️";
-  }
-
+  texto.textContent = mensaje;
+  iconoEl.textContent = icono;
   modal.classList.add("active");
 
   setTimeout(() => {
     modal.classList.remove("active");
   }, 3000);
+}
+
+/* ===== PASO 6 – PROCESAR PAGO ===== */
+
+document.getElementById("pago-form").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  if (pagoSeleccionado === 'PayPal') {
+    return;
+  }
+
+  if (pagoSeleccionado === 'Transferencia') {
+    mostrarResultado(
+      "Orden registrada con transferencia. Realiza el depósito con los datos indicados; tu pedido se procesará cuando se confirme el pago.",
+      "✅"
+    );
+    vaciarCarrito();
+    actualizarCarrito();
+  } else if (pagoSeleccionado === 'Efectivo') {
+    mostrarResultado(
+      "Orden registrada para pago en efectivo. Presenta el código en tienda para completar la compra.",
+      "✅"
+    );
+    vaciarCarrito();
+    actualizarCarrito();
+  } else if (pagoSeleccionado === 'Tarjeta') {
+    mostrarResultado("Pago con tarjeta procesado correctamente. Gracias por tu compra.", "✅");
+    vaciarCarrito();
+    actualizarCarrito();
+  } else {
+    mostrarResultado("Selecciona un método de pago válido.", "⚠️");
+  }
+
+  cerrarPago();
 });
 
 
@@ -1247,9 +1661,134 @@ function cerrarContacto() {
   document.body.style.overflow = "auto";
 }
 
+function abrirNosotros() {
+  const panel = document.getElementById("nosotros");
+  panel.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function cerrarNosotros() {
+  const panel = document.getElementById("nosotros");
+  panel.classList.remove("active");
+  document.body.style.overflow = "auto";
+}
+
 </script>
+<!-- BOTÓN FLOTANTE -->
+<button id="chat-toggle" type="button" aria-label="Abrir chat" data-narrar="Abrir chat" onclick="toggleChat()">💬</button>
 
+<!-- CHAT -->
+<div id="chat-container" class="hidden">
+    <div id="chat-header">
+        🤖 Asistente
+        <span onclick="toggleChat()">✖</span>
+    </div>
 
+    <div id="chat-box" aria-live="polite"></div>
 
+    <div id="chat-input-area">
+        <input type="text" id="user-input" placeholder="Escribe un mensaje..." aria-label="Mensaje de chat">
+        <button onclick="sendMessage()" data-narrar="Enviar mensaje">➤</button>
+    </div>
+</div>
+<script>
+// abrir / cerrar chat
+function toggleChat() {
+    const chat = document.getElementById("chat-container");
+    chat.classList.toggle("hidden");
+}
+
+// enviar mensaje
+function sendMessage() {
+    let input = document.getElementById("user-input");
+    let message = input.value;
+
+    if (message.trim() === "") return;
+
+    let chatBox = document.getElementById("chat-box");
+
+    chatBox.innerHTML += `<p><b>Tú:</b> ${message}</p>`;
+
+    fetch('/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: message})
+    })
+    .then(res => res.json())
+    .then(data => {
+        chatBox.innerHTML += `<p><b>Bot:</b> ${data.response}</p>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    input.value = "";
+}
+
+// 🔥 ENTER PARA ENVIAR
+document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("user-input");
+
+    input.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+            sendMessage();
+        }
+    });
+});
+
+const speechSupport = 'speechSynthesis' in window;
+let narracionActiva = false;
+
+function narrarTexto(texto) {
+    if (!texto || !speechSupport) return;
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(texto);
+    utterance.lang = 'es-MX';
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    speechSynthesis.speak(utterance);
+}
+
+function toggleNarracion() {
+    narracionActiva = !narracionActiva;
+    const btn = document.getElementById('btn-activar-narracion');
+    btn.textContent = narracionActiva ? '🔊 Narración ON' : '🔊 Narración OFF';
+    btn.setAttribute('aria-pressed', narracionActiva);
+    btn.setAttribute('aria-label', narracionActiva ? 'Narración activada' : 'Activar narración de elementos seleccionados');
+}
+
+function toggleAltoContraste() {
+    const btn = document.getElementById('btn-contraste');
+    const activo = document.documentElement.classList.toggle('alto-contraste');
+    btn.textContent = activo ? '🌙 Contraste normal' : '🌓 Alto contraste';
+    btn.setAttribute('aria-pressed', activo);
+    btn.setAttribute('aria-label', activo ? 'Desactivar alto contraste' : 'Activar modo de alto contraste');
+}
+
+document.getElementById('btn-activar-narracion').addEventListener('click', toggleNarracion);
+document.getElementById('btn-contraste').addEventListener('click', toggleAltoContraste);
+
+document.addEventListener('click', function (e) {
+    if (!narracionActiva) return;
+    const target = e.target.closest('button, a, [data-narrar]');
+    if (!target) return;
+    const texto = target.dataset.narrar || target.getAttribute('aria-label') || target.innerText.trim();
+    narrarTexto(texto.replace(/\s+/g, ' '));
+});
+
+document.addEventListener('keydown', function (e) {
+    if (!narracionActiva || e.key !== 'Enter') return;
+    const target = e.target.closest('button, a, [data-narrar]');
+    if (!target) return;
+    const texto = target.dataset.narrar || target.getAttribute('aria-label') || target.innerText.trim();
+    narrarTexto(texto.replace(/\s+/g, ' '));
+});
+
+document.addEventListener('focusin', function (e) {
+    if (!narracionActiva) return;
+    const target = e.target.closest('button, a, input, textarea, select, [data-narrar]');
+    if (!target) return;
+    const texto = target.dataset.narrar || target.getAttribute('aria-label') || target.getAttribute('placeholder') || target.innerText.trim();
+    narrarTexto(texto.replace(/\s+/g, ' '));
+});
+</script>
 </body>
 </html>
